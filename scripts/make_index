@@ -1,0 +1,1 @@
+gdaltindex -t_srs "EPSG:4326" -f "GeoJSON" "../test/data/raster/95000_45000.tif.index.json" data/raster/tiled/*.tif

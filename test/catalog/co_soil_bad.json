@@ -1,0 +1,17 @@
+{
+  "Size": [
+    64500, 
+    51000
+  ], 
+  "Path": "data/raster/co_soil_tiled/", 
+  "GridSize": 500, 
+  "CoordinateSystem": "PROJCS[\"unnamed\",\n    GEOGCS[\"NAD83\",\n        DATUM[\"North_American_Datum_1983\",\n            SPHEROID[\"GRS 1980\",6378137,298.2572221010042,\n                AUTHORITY[\"EPSG\",\"7019\"]],\n            TOWGS84[0,0,0,0,0,0,0],\n            AUTHORITY[\"EPSG\",\"6269\"]],\n        PRIMEM[\"Greenwich\",0],\n        UNIT[\"degree\",0.0174532925199433],\n        AUTHORITY[\"EPSG\",\"4269\"]],\n    PROJECTION[\"Albers_Conic_Equal_Area\"],\n    PARAMETER[\"standard_parallel_1\",29.5],\n    PARAMETER[\"standard_parallel_2\",45.5],\n    PARAMETER[\"latitude_of_center\",23],\n    PARAMETER[\"longitude_of_center\",-96],\n    PARAMETER[\"false_easting\",0],\n    PARAMETER[\"false_northing\",0],\n    UNIT[\"metre\",1,\n        AUTHORITY[\"EPSG\",\"9001\"]]]", 
+  "GeoTransform": [
+    -1146375.0, 
+    10.0, 
+    0.0, 
+    2073705.0, 
+    0.0, 
+    -10.0
+  ]
+}

@@ -1,0 +1,8 @@
+<PAMDataset>
+  <PAMRasterBand band="1">
+    <Description>Layer_1</Description>
+    <Metadata>
+      <MDI key="LAYER_TYPE">thematic</MDI>
+    </Metadata>
+  </PAMRasterBand>
+</PAMDataset>
