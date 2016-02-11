@@ -1,0 +1,2 @@
+#!/bin/bash
+python create_catalog.py --tiles /tmp/tiled/95000_45000.tif ../test/data/raster/95000_45000.tif
