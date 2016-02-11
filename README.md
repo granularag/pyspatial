@@ -1,9 +1,3 @@
-# Development
-
-* Python code: pip install -e /path/to/ana-spatial
-* Cython code: python setup.py build_ext --inplace
-* Tests: nosetests -v
-
 # Overview:
 
 pyspatial is python package to provide data structures on top of gdal/ogr.  The 3 core data stuctures are:
@@ -13,3 +7,9 @@ pyspatial is python package to provide data structures on top of gdal/ogr.  The 
 * RasterBand: a numpy array representation of a raster with spatial metadata
 
 pyspatial makes it easy to read, analyze, query, and manipulate spatial data in both vector and raster form.
+
+# Development
+
+* Python code: pip install -e /path/to/pyspatial
+* Cython code: python setup.py build_ext --inplace
+* Tests: nosetests -v
