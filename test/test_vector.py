@@ -96,8 +96,15 @@ class TestVectorLayer:
         assert s.min() > 1440 and s.max() < 1441
         d = vl.boundingboxes().distances(vl["MI"], proj='albers')/1.e3
         assert abs(d["CA"] - 1853.3812112445789) < 1e-6
-        # Compute the haversine distance to MI
+        # Compute the haversine (great-circle) distance to MI
         MI = vl["MI"].Centroid().GetPoints()[0]
         d = (vl.to_wgs84().centroids(format="Series")
              .map(lambda x: haversine(x, MI))/1.e3)
         assert abs(d["WA"] - 2706.922595) < 1e-6
+
+    def test_to_json(self):
+        with open(get_path("RI.json")) as inf:
+            exp = inf.read()
+        act, _ = vt.read_layer(get_path("cb_2014_us_state_20m.zip"),
+                               index="STUSPS")
+        assert exp == act[["RI"]].to_json()

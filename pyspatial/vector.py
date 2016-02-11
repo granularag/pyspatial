@@ -90,9 +90,7 @@ def to_geometry(shp, copy=False, proj=None):
         return geom
 
     if copy:
-        geom_cp = ogr.CreateGeometryFromWkb(geom.ExportToWkb())
-        geom_cp.AssignSpatialReference(geom.GetSpatialReference())
-        geom = geom_cp
+        geom = geom.Clone()
 
     if proj is not None:
         source_proj = geom.GetSpatialReference()
@@ -251,7 +249,7 @@ class VectorLayer(pd.Series):
         if not isinstance(ids, pd.Index):
             ids = self._make_ids(ids)
 
-        geoms = [ogr.CreateGeometryFromWkb(self[i].ExportToWkb()) for i in ids]
+        geoms = [self[i].Clone() for i in ids]
         proj = SpatialReference()
         proj.ImportFromWkt(self.proj.ExportToWkt())
         [g.AssignSpatialReference(proj) for g in geoms]
@@ -642,7 +640,7 @@ class VectorLayer(pd.Series):
 
     def transform(self, target_proj):
         ct = CoordinateTransformation(self.proj, target_proj)
-        feats = [f.Clone() for f in self.features]
+        feats = [f.Clone() for f in self]
         [f.Transform(ct) for f in feats]
         return VectorLayer(feats, proj=target_proj, index=self.index)
 
@@ -913,7 +911,8 @@ class VectorLayer(pd.Series):
             vl = self
 
         res = {"type": "FeatureCollection"}
-        res["features"] = [f.ExportToJson(as_object=True) for f in vl.features]
+        res["features"] = [to_feature(f, i).ExportToJson(as_object=True)
+                           for i, f in enumerate(vl)]
 
         if df is not None:
             for i, f in zip(vl.ids, res["features"]):
@@ -1104,6 +1103,4 @@ def from_series(geom_series, proj=None):
 
     proj = ut.projection_from_string() if proj is None else proj
     geoms = geom_series.map(lambda x: to_geometry(x, proj=proj))
-    #pd.Series([to_geometry(g, proj=proj) for g in geom_series],
-    #                  inde
     return VectorLayer(geoms, proj=proj)
