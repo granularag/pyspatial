@@ -44,7 +44,7 @@ class TestRasterBand:
 
         # Transform all vector shapes into raster projection, and convert to
         # pixels.
-        vl_transformed = self.vl_one_shape.transform(rast_proj, inplace=False)
+        vl_transformed = self.vl_one_shape.transform(rast_proj)
         px_shps_transformed = self.rb.to_pixels(vl_transformed)
 
         # Also convert CLUs to pixels without transforming into raster

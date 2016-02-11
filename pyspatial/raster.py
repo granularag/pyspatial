@@ -217,13 +217,13 @@ class RasterBase(object):
                                         self.lat_px_size)
         return int(lon_px), int(lat_px)
 
-    def shape_to_pixel(self, feat):
+    def shape_to_pixel(self, geom):
         """Takes a feature and returns a shapely object transformed into the
         pixel coords.
 
         Parameters
         ----------
-        feat : osgeo.ogr.Feature
+        feat : osgeo.ogr.Geometry
             Feature to be transformed.
 
         Returns
@@ -231,7 +231,7 @@ class RasterBase(object):
         shapely.Polygon
             Feature in pixel coordinates.
         """
-        shp = wkb.loads(feat.geometry().ExportToWkb())
+        shp = wkb.loads(geom.ExportToWkb())
         return ops.transform(self._to_pixels, shp)
 
     def to_pixels(self, vector_layer):

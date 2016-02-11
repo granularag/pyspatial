@@ -1,1 +1,2 @@
 find . | grep "\.pyc" | xargs rm
+find . | grep "~$" | xargs rm

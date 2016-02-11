@@ -44,7 +44,7 @@ class TestVectorLayer:
         p = get_path("clu/four_shapes_2il_2ca.p")
         cls.df = pickle.load(open(p))
         assert isinstance(cls.counties, vt.VectorLayer)
-        assert isinstance(cls.counties["San Francisco"], ogr.Feature)
+        assert isinstance(cls.counties["San Francisco"], ogr.Geometry)
 
     def test_read(self):
         states, df = vt.read_layer(get_path("cb_2014_us_state_500k.zip"))
@@ -58,14 +58,7 @@ class TestVectorLayer:
         assert isinstance(vt.from_series(series), vt.VectorLayer)
 
     def test_predicates(self):
-        # ogr.Feature
         sf = self.counties["San Francisco"]
-        assert isinstance(sf, ogr.Feature)
-        sf_ids = self.zips.within(sf, index_only=True)
-        assert all(map(lambda x: x.startswith("941"), sf_ids))
-
-        # ogr.Geometry()
-        sf = self.counties["San Francisco"].GetGeometryRef()
         assert isinstance(sf, ogr.Geometry)
         sf_ids = self.zips.within(sf, index_only=True)
         assert all(map(lambda x: x.startswith("941"), sf_ids))
@@ -104,7 +97,7 @@ class TestVectorLayer:
         d = vl.boundingboxes().distances(vl["MI"], proj='albers')/1.e3
         assert abs(d["CA"] - 1853.3812112445789) < 1e-6
         # Compute the haversine distance to MI
-        MI = vl["MI"].geometry().Centroid().GetPoints()[0]
+        MI = vl["MI"].Centroid().GetPoints()[0]
         d = (vl.to_wgs84().centroids(format="Series")
              .map(lambda x: haversine(x, MI))/1.e3)
         assert abs(d["WA"] - 2706.922595) < 1e-6

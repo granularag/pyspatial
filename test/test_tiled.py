@@ -41,9 +41,6 @@ class TestRasterDatasetTiled:
         # Read in raster projection (applies to all raster tiles).
         rast_proj = self.dataset.proj
 
-        # Transform all vector shapes into raster projection.
-        self.vl.transform(rast_proj, inplace=True)
-
         # Compute counts for a single shape using single-tile computation for reference.
         shp = self.px_shps[0]
         mask = rasterize(shp, ext_outline=0, int_outline=1).T
@@ -61,9 +58,6 @@ class TestRasterDatasetTiled:
 
         # Read in raster projection (applies to all raster tiles).
         rast_proj = self.dataset.proj
-
-        # Transform all vector shapes into raster projection.
-        self.vl.transform(rast_proj, inplace=True)
 
         # All shapes in the layer should already be in pixel coords. Check that we have the right number of them.
         assert (len(self.px_shps) == 23403)

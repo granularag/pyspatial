@@ -2,9 +2,9 @@
 
 pyspatial is python package to provide data structures on top of gdal/ogr.  The 3 core data stuctures are:
 
-* VectorLayer: a collection of shapes with pandas like manipulation
+* VectorLayer: a collection of geometries with pandas like manipulation. Represented as osgeo.ogr.Geometry objects. For an object reference see [[http://gdal.org/python/]].
 * RasterDataset: an abstraction of a spatial raster (both tiled on untiled) to support querying of pixels that intersect with shapes.
-* RasterBand: a numpy array representation of a raster with spatial metadata
+* RasterBand: a numpy array representation of a raster with spatial metadata (in memory only, no tiled support).
 
 pyspatial makes it easy to read, analyze, query, and manipulate spatial data in both vector and raster form.
 

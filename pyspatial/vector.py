@@ -3,6 +3,7 @@ from urlparse import urlparse
 import requests
 import smart_open
 
+from numpy import ndarray
 import pandas as pd
 from rtree import index
 from osgeo.osr import CoordinateTransformation, SpatialReference
@@ -104,7 +105,7 @@ def to_geometry(shp, copy=False, proj=None):
     return geom
 
 
-def bounding_box(envelope):
+def bounding_box(envelope, proj):
     xmin, xmax, ymin, ymax = envelope
     ring = ogr.Geometry(ogr.wkbLinearRing)
     ring.AddPoint(xmin, ymin)
@@ -114,6 +115,7 @@ def bounding_box(envelope):
     ring.AddPoint(xmin, ymin)
     poly = ogr.Geometry(ogr.wkbPolygon)
     poly.AddGeometry(ring)
+    poly.AssignSpatialReference(proj)
     return poly
 
 
@@ -125,18 +127,30 @@ def to_feature(shp, fid, proj=None):
     return feature
 
 
+OLD_PANDAS = issubclass(pd.Series, ndarray)
 BOOL_PREDICATES = ["intersects", "contains", "within", "crosses", "touches",
                    "equals", "disjoint"]
 
 
-class VectorLayer(object):
+def _convert_array_args(args):
+    _is_type = (isinstance(args[0], BaseGeometry) or
+                isinstance(args[0], ogr.Geometry) or
+                isinstance(args[0], ogr.Feature))
+
+    if len(args) == 1 and _is_type:
+        args = ([args[0]],)
+
+    return args
+
+
+class VectorLayer(pd.Series):
     """
     Parameters
     ----------
-    features: ogr.Feature[] or ogr.Geometry[], shapely.BaseGeometry[]
+    geometries: org.Feature[], ogr.Geometry[], shapely.BaseGeometry[]
 
     proj: osr.SpatialReference
-         The projection for the features
+         The projection for the geometries
 
     index: iterable
         The index to use for the shapes
@@ -155,100 +169,93 @@ class VectorLayer(object):
         The names of the attributes
 
     """
-    def __init__(self, features, proj, index):
+    _metadata = ['name', 'proj']
+
+    def __new__(cls, *args, **kwargs):
+        kwargs.pop('crs', None)
+        if OLD_PANDAS:
+            args = _convert_array_args(args)
+            arr = pd.Series.__new__(cls, *args, **kwargs)
+        else:
+            arr = pd.Series.__new__(cls)
+        if type(arr) is VectorLayer:
+            return arr
+        else:
+            return arr.view(VectorLayer)
+
+    def __init__(self, *args, **kwargs):
+
+        proj = kwargs.pop("proj", None)
+        if proj is None:
+            proj = ut.projection_from_epsg()
+
+        if isinstance(args[0], pd.Series):
+            kwargs.pop("index", None)
+
+        super(VectorLayer, self).__init__(*args, **kwargs)
+
+        self.proj = proj
         self._sindex = None
 
-        if not hasattr(features, "__iter__"):
-            raise ValueError("Features must be iterable.")
+    @property
+    def _constructor(self):
+        return VectorLayer
 
-        if len(features) > 0:
-            f0 = features[0]
-            if isinstance(f0, ogr.Geometry) or isinstance(f0, BaseGeometry):
-                fids = xrange(len(features))
-                self.features = [to_feature(*f) for f in zip(features, fids)]
-            elif isinstance(f0, ogr.Feature):
-                self.features = features
-            else:
-                msg = "features of type %s not supported" % type(f0)
-                raise ValueError(msg)
-        else:
-            self.features = features
+    def _wrapped_pandas_method(self, mtd, *args, **kwargs):
+        """Wrap a generic pandas method to ensure it returns a VectorLayer"""
+        val = getattr(super(VectorLayer, self), mtd)(*args, **kwargs)
+        if type(val) == pd.Series:
+            val.__class__ = VectorLayer
+            val.crs = self.crs
+            val._invalidate_sindex()
+        return val
 
-        [f.geometry().FlattenTo2D() for f in self.features]
-        self.proj = proj
-        self.index = index
+    def __getitem__(self, key):
+        return self._wrapped_pandas_method('__getitem__', key)
 
-        self._id_to_features = dict(zip(self.index, self.features))
-        if len(self.index) > 0:
-            self._id_type = type(self.index[0])
-            f = self.features[0]
-            self.fields = [f.GetFieldDefnRef(i).name for i in
-                           xrange(f.GetFieldCount())]
-        else:
-            self._id_type = None
-            self.fields = []
+    def sort_index(self, *args, **kwargs):
+        return self._wrapped_pandas_method('sort_index', *args, **kwargs)
 
-    def __iter__(self):
-        for f in self.features:
-            yield f
+    def take(self, *args, **kwargs):
+        return self._wrapped_pandas_method('take', *args, **kwargs)
 
-    def __len__(self):
-        return len(self.features)
+    def select(self, *args, **kwargs):
+        return self._wrapped_pandas_method('select', *args, **kwargs)
 
     def _make_ids(self, ids):
         return pd.Index(ids)
 
-    def filter_by_id(self, ids, inplace=False):
+    # TODO: Fix this hack
+    # Just to avoid a big refactor right now
+    @property
+    def features(self):
+        return self
+
+    # TODO: Fix this hack
+    # Just to avoid a big refactor right now
+    @property
+    def ids(self):
+        return self.index
+
+    # TODO: add inplace support
+    def filter_by_id(self, ids):
         """Return a vector layer with only those shapes with
-        id in ids
+        id in ids.
 
         Parameters
         ----------
         ids: iterable
-            The ids to filter on
-
-        inplace: boolean (default False)
-            Perform this operation in place (do not return a
-            new vector layer."""
+            The ids to filter on"""
 
         assert hasattr(ids, "__iter__"), "ids must be iterable"
         if not isinstance(ids, pd.Index):
             ids = self._make_ids(ids)
 
-        if inplace:
-            self.features = self[ids]
-            self.index = ids
-            self._id_to_features = dict(zip(self.index, self.features))
-            self._sindex = None
-            self.build_sindex()
-        else:
-            features = [self._id_to_features[i].Clone() for i in ids]
-            proj = SpatialReference()
-            proj.ImportFromWkt(self.proj.ExportToWkt())
-            vl = VectorLayer(features, proj, ids)
-            return vl
-
-    def __getitem__(self, keys):
-
-        if isinstance(keys, slice):
-            ids = self.index[keys]
-            return self.filter_by_id(ids)
-
-        if self._id_type is None:
-            return self.filter_by_id([])
-
-        if hasattr(keys, "__iter__"):
-            return self.filter_by_id([k for k in keys])
-        else:
-            try:
-                k = self._id_type(keys)
-            except:
-                raise ValueError("Invalid key type: %s" % keys)
-
-            if k not in self._id_to_features:
-                raise KeyError("Key not found: %s" % k)
-
-            return self._id_to_features[self._id_type(keys)]
+        geoms = [ogr.CreateGeometryFromWkb(self[i].ExportToWkb()) for i in ids]
+        proj = SpatialReference()
+        proj.ImportFromWkt(self.proj.ExportToWkt())
+        [g.AssignSpatialReference(proj) for g in geoms]
+        return VectorLayer(geoms, index=ids)
 
     def _get_index_intersection(self, shp):
         if self._sindex is None:
@@ -261,7 +268,7 @@ class VectorLayer(object):
 
         return shp, self._sindex.intersection(shp.bounds, objects="raw")
 
-    def intersects(self, shp, index_only=False, inplace=False):
+    def intersects(self, shp, index_only=False):
         """Return a vector layer with only those shapes in the
         vector layer that intersect with shp
 
@@ -273,25 +280,20 @@ class VectorLayer(object):
         index_only: boolean (default False)
             Return the ids only (not a new vector layer)
 
-        inplace: boolean (default False)
-            Perform this operation in place (do not return a
-            new vector layer.
-
         See Also
         --------
         http://toblerity.org/shapely/manual.html#object.intersects
 
         """
         _shp, ids = self._get_index_intersection(shp)
-        ids = [i for i in ids if (self.to_geometry(i).
-                                  Intersect(to_geometry(shp)))]
+        ids = [i for i in ids if self[i].Intersect(to_geometry(shp))]
 
         ids = self._make_ids(ids)
 
         if index_only:
             return ids
         else:
-            return self.filter_by_id(ids, inplace=inplace)
+            return self.filter_by_id(ids)
 
     def iintersects(self, shp):
         """Return an index with only those shapes in the
@@ -307,9 +309,9 @@ class VectorLayer(object):
 
         pandas.Index
         """
-        return self.intersects(shp, index_only=True, inplace=False)
+        return self.intersects(shp, index_only=True)
 
-    def contains(self, shp, index_only=False, inplace=False):
+    def contains(self, shp, index_only=False):
         """Return a vector layer with only those shapes in the
         vector layer that contain shp
 
@@ -321,10 +323,6 @@ class VectorLayer(object):
         index_only: boolean (default False)
             Return the ids only (not a new vector layer)
 
-        inplace: boolean (default False)
-            Perform this operation in place (do not return a
-            new vector layer.
-
         See Also
         --------
         http://toblerity.org/shapely/manual.html#object.contains
@@ -332,13 +330,13 @@ class VectorLayer(object):
         """
         shp = to_geometry(shp)
         _shp, ids = self._get_index_intersection(shp)
-        ids = [i for i in ids if self.to_geometry(i).Contains(shp)]
+        ids = [i for i in ids if self[i].Contains(shp)]
         ids = self._make_ids(ids)
 
         if index_only:
             return ids
         else:
-            return self.filter_by_id(ids, inplace=inplace)
+            return self.filter_by_id(ids)
 
     def icontains(self, shp):
         """Return an index with only those shapes in the
@@ -354,9 +352,9 @@ class VectorLayer(object):
 
         pandas.Index
         """
-        return self.contains(shp, index_only=True, inplace=False)
+        return self.contains(shp, index_only=True)
 
-    def within(self, shp, index_only=False, inplace=False):
+    def within(self, shp, index_only=False):
         """Return a vector layer with only those shapes in
         the vector layer that are within shp.
 
@@ -368,23 +366,19 @@ class VectorLayer(object):
         index_only: boolean (default False)
             Return the ids only (not a new vector layer)
 
-        inplace: boolean (default False)
-            Perform this operation in place (do not return a
-            new vector layer.
-
         See Also
         --------
         http://toblerity.org/shapely/manual.html#object.within"""
 
         shp = to_geometry(shp)
         _shp, ids = self._get_index_intersection(shp)
-        ids = [i for i in ids if self.to_geometry(i).Within(shp)]
+        ids = [i for i in ids if self[i].Within(shp)]
         ids = self._make_ids(ids)
 
         if index_only:
             return ids
         else:
-            return self.filter_by_id(ids, inplace=inplace)
+            return self.filter_by_id(ids)
 
     def iwithin(self, shp):
         """Return an index with only those shapes in the
@@ -399,9 +393,9 @@ class VectorLayer(object):
         -------
 
         pandas.Index"""
-        return self.within(shp, index_only=True, inplace=False)
+        return self.within(shp, index_only=True)
 
-    def crosses(self, shp, index_only=False, inplace=False):
+    def crosses(self, shp, index_only=False):
         """Return a vector layer with only those shapes in the
         vector layer that cross shp
 
@@ -413,23 +407,19 @@ class VectorLayer(object):
         index_only: boolean (default False)
             Return the ids only (not a new vector layer)
 
-        inplace: boolean (default False)
-            Perform this operation in place (do not return a
-            new vector layer.
-
         See Also
         --------
         http://toblerity.org/shapely/manual.html#object.crosses"""
 
         shp = to_geometry(shp)
         _shp, ids = self._get_index_intersection(shp)
-        ids = [i for i in ids if self.to_geometry(i).Crosses(shp)]
+        ids = [i for i in ids if self[i].Crosses(shp)]
         ids = self._make_ids(ids)
 
         if index_only:
             return ids
         else:
-            return self.filter_by_id(ids, inplace=inplace)
+            return self.filter_by_id(ids)
 
     def icrosses(self, shp):
         """Return an index with only those shapes in the
@@ -444,9 +434,9 @@ class VectorLayer(object):
         -------
 
         pandas.Index"""
-        return self.crosses(shp, index_only=True, inplace=False)
+        return self.crosses(shp, index_only=True)
 
-    def touches(self, shp, index_only=False, inplace=False):
+    def touches(self, shp, index_only=False):
         """Return a vector layer with only those shapes in the
         vector layer that touches shp
 
@@ -458,10 +448,6 @@ class VectorLayer(object):
         index_only: boolean (default False)
             Return the ids only (not a new vector layer)
 
-        inplace: boolean (default False)
-            Perform this operation in place (do not return a
-            new vector layer.
-
         See Also
         --------
         http://toblerity.org/shapely/manual.html#object.touches
@@ -469,13 +455,13 @@ class VectorLayer(object):
 
         shp = to_geometry(shp)
         _shp, ids = self._get_index_intersection(shp)
-        ids = [i for i in ids if self.to_geometry(i).Touches(shp)]
+        ids = [i for i in ids if self[i].Touches(shp)]
         ids = self._make_ids(ids)
 
         if index_only:
             return ids
         else:
-            return self.filter_by_id(ids, inplace=inplace)
+            return self.filter_by_id(ids)
 
     def itouches(self, shp):
         """Return an index with only those shapes in the
@@ -490,9 +476,9 @@ class VectorLayer(object):
         -------
 
         pandas.Index"""
-        return self.touches(shp)
+        return self.touches(shp, index_only=True)
 
-    def equals(self, shp, index_only=False, inplace=False):
+    def equals(self, shp, index_only=False):
         """Return a vector layer with only those shapes in the
         vector layer that are equal shp
 
@@ -516,13 +502,13 @@ class VectorLayer(object):
 
         shp = to_geometry(shp)
         _shp, ids = self._get_index_intersection(shp)
-        ids = [i for i in ids if self.to_geometry(i).Equals(shp)]
+        ids = [i for i in ids if self[i].Equals(shp)]
         ids = self._make_ids(ids)
 
         if index_only:
             return ids
 
-        return self.filter_by_id(ids, inplace=inplace)
+        return self.filter_by_id(ids)
 
     def iequals(self, shp):
         """Return an index with only those shapes in the
@@ -536,9 +522,9 @@ class VectorLayer(object):
         Returns
         -------
         pandas.Index"""
-        return self.equals(shp, index_only=True, inplace=False)
+        return self.equals(shp, index_only=True)
 
-    def disjoint(self, shp, index_only=False, inplace=False):
+    def disjoint(self, shp, index_only=False):
         """Return a vector layer with only those shapes in the
         vector layer that are disjoint with shp
 
@@ -566,7 +552,7 @@ class VectorLayer(object):
         if index_only:
             return ids
 
-        return self.filter_by_id(ids, inplace=inplace)
+        return self.filter_by_id(ids)
 
     def idisjoint(self, shp):
         """Return an index with only those shapes in the
@@ -580,7 +566,7 @@ class VectorLayer(object):
         Returns
         -------
         pandas.Index"""
-        return self.disjoint(shp, index_only=True, inplace=False)
+        return self.disjoint(shp, index_only=True)
 
     def intersection(self, shp):
         """
@@ -602,13 +588,14 @@ class VectorLayer(object):
         if isinstance(shp, list):
             raise ValueError("Collections of shapes are not supported!")
 
-        for id, feat in vl.iteritems():
-            geom_wkb = wkb.dumps(shp.intersection(to_shapely(feat)))
-            geom = ogr.CreateGeometryFromWkb(geom_wkb)
-            geom.AssignSpatialReference(self.proj)
-            feat.SetGeometry(geom)
+        geoms = []
+        for geom in vl:
+            geom_wkb = wkb.dumps(shp.intersection(to_shapely(geom)))
+            _geom = ogr.CreateGeometryFromWkb(geom_wkb)
+            _geom.AssignSpatialReference(self.proj)
+            geoms.append(_geom)
 
-        return vl
+        return VectorLayer(geoms, proj=self.proj, index=vl.index)
 
     def unary_union(self):
         return ops.unary_union(self.to_shapely())
@@ -617,7 +604,7 @@ class VectorLayer(object):
         """
         Get vector layer with valid shapes.
         """
-        ids = [i for i in self.index if self.to_geometry(i).IsValid]
+        ids = [i for i in self.index if self[i].IsValid]
         if index_only:
             return ids
 
@@ -627,7 +614,7 @@ class VectorLayer(object):
         """
         Get vector layer with invalid shapes.
         """
-        ids = [i for i in self.index if not self.to_geometry(i).IsValid]
+        ids = [i for i in self.index if not self[i].IsValid]
         if index_only:
             return ids
 
@@ -637,7 +624,7 @@ class VectorLayer(object):
         """
         Get vector layer with the empty shapes
         """
-        ids = [i for i in self.index if not self.to_geometry(i).IsEmpty]
+        ids = [i for i in self.index if not self[i].IsEmpty]
         if index_only:
             return ids
 
@@ -647,22 +634,17 @@ class VectorLayer(object):
         """
         Get vector layer with the ring shapes
         """
-        ids = [i for i in self.index if not self.to_geometry(i).IsRing]
+        ids = [i for i in self.index if not self[i].IsRing]
         if index_only:
             return ids
 
         return self.filter_by_id(ids)
 
-    def transform(self, target_proj, inplace=False):
+    def transform(self, target_proj):
         ct = CoordinateTransformation(self.proj, target_proj)
-        if inplace:
-            [f.geometry().Transform(ct) for f in self.features]
-            self._sindex = None
-            self.build_sindex()
-        else:
-            feats = [f.Clone() for f in self.features]
-            [f.geometry().Transform(ct) for f in feats]
-            return VectorLayer(feats, target_proj, self.index)
+        feats = [f.Clone() for f in self.features]
+        [f.Transform(ct) for f in feats]
+        return VectorLayer(feats, proj=target_proj, index=self.index)
 
     def to_wgs84(self):
         """Transform the VectorLayer into WGS84"""
@@ -673,9 +655,7 @@ class VectorLayer(object):
         if ids is None:
             s = [to_shapely(f) for f in self.features]
         else:
-            if type(ids) in [str, unicode] and self._id_type in [str, unicode]:
-                return to_shapely(self[self._id_type(ids)])
-            elif hasattr(ids, "__iter__"):
+            if hasattr(ids, "__iter__"):
                 s = [to_shapely(self[self._id_type(id)]) for id in ids]
             else:
                 return to_shapely(self[ids])
@@ -717,7 +697,7 @@ class VectorLayer(object):
         -------
         pandas.Series"""
         if proj is None:
-            return self.to_geometry().map(lambda x: x.GetArea())
+            return self.map(lambda x: x.GetArea())
 
         if proj == 'utm':
             if self.proj.ExportToProj4().strip() != ut.PROJ_WGS84:
@@ -791,14 +771,13 @@ class VectorLayer(object):
         formats = ["DataFrame", "VectorLayer", "Series"]
 
         if format in ("DataFrame", "Series"):
-            data = (f.geometry().Centroid().GetPoints()[0] for f in
-                    self.features)
+            data = (f.Centroid().GetPoints()[0] for f in self.features)
             if format == "Series":
                 return pd.Series(data, index=self.index)
             else:
                 return pd.DataFrame(data, columns=["x", "y"], index=self.index)
         elif format == "VectorLayer":
-            pts = [f.geometry().Centroid() for f in self.features]
+            pts = [f.Centroid() for f in self.features]
             [p.AssignSpatialReference(self.proj) for p in pts]
             return VectorLayer(pts, self.proj, self.index)
         else:
@@ -807,26 +786,25 @@ class VectorLayer(object):
     def envelopes(self):
         """The the envelope of each shape as xmin, xmax, ymin, ymax.
         Returns a pandas.Series."""
-        data = (f.geometry().GetEnvelope() for f in self.features)
+        data = (f.GetEnvelope() for f in self.features)
         return pd.Series(data, index=self.index)
 
     def boundingboxes(self):
         """Return a VectorLayer with the bounding boxes of each
         geometry"""
-        geoms = self.envelopes().map(bounding_box)
-        [g.AssignSpatialReference(self.proj) for g in geoms]
-        return VectorLayer(geoms, self.proj, self.index)
+        geoms = self.envelopes().map(lambda x: bounding_box(x, self.proj))
+        return VectorLayer(geoms, proj=self.proj, index=self.index)
 
     def upper_left_corners(self):
         """Get a DataFrame with "x" and "y" columns for the
         min_lon, max_lat of each feature"""
-        data = [(f.geometry().GetEnvelope()[0], f.geometry().GetEnvelope()[3])
+        data = [(f.GetEnvelope()[0], f.GetEnvelope()[3])
                 for f in self.features]
         return pd.DataFrame(data, columns=["x", "y"], index=self.index)
 
     def size_bytes(self):
         """Get the size of the geometry in bytes"""
-        return self.map(lambda x: x.geometry().WkbSize())
+        return self.map(lambda x: x.WkbSize())
 
     def get_extent(self):
         """The xmin, xmax, ymin, ymax values of the layer"""
@@ -840,19 +818,10 @@ class VectorLayer(object):
         (xmin, xmax, ymin, ymax) = self.get_extent()
         return to_geometry(box(xmin, ymin, xmax, ymax), proj=self.proj)
 
-    def keys(self):
-        return [i for i in self.index]
-
-    def values(self):
-        return [self[i] for i in self.index]
-
-    def iteritems(self):
-        return ((k, v) for k, v in self._id_to_features.iteritems())
-
     def _gen_index(self):
         ix = xrange(len(self.features))
-        for i, id, feat in zip(ix, self.index, self.features):
-            xmin, xmax, ymin, ymax = feat.geometry().GetEnvelope()
+        for i, id, geom in zip(ix, self.index, self.features):
+            xmin, xmax, ymin, ymax = geom.GetEnvelope()
             yield (i, (xmin, ymin, xmax, ymax), id)
 
     def build_sindex(self):
@@ -886,7 +855,7 @@ class VectorLayer(object):
         return ret
 
     def sort(self, kind="upper_left_corners", columns=["y", "x"],
-             ascending=True, inplace=False, index_only=False):
+             ascending=True, index_only=False):
         """Sort the vector layer by upper_left_corners or centroids
 
         Parameters
@@ -920,7 +889,7 @@ class VectorLayer(object):
         if index_only:
             return df.index
 
-        return self.filter_by_id(df.index, inplace=inplace)
+        return self.filter_by_id(df.index)
 
     def to_dict(self, df=None):
         """Return a dictionary representation of the object.
@@ -957,10 +926,6 @@ class VectorLayer(object):
                 f["properties"]["__id__"] = i
 
         return res
-
-    @property
-    def ids(self):
-        return self.index
 
     def to_json(self, path=None, df=None, precision=6):
         """Return the layer as a GeoJSON.  If a path is provided,
@@ -1039,7 +1004,7 @@ def read_datasource(ds, layer=0, index=None):
     geoms = [to_geometry(f, copy=True) for f in features]
     proj = ut.get_projection(dslayer)
     ds = None
-    return VectorLayer(geoms, proj, ids), df
+    return VectorLayer(geoms, proj=proj, index=ids), df
 
 
 def read_layer(path, layer=0, index=None):
@@ -1114,11 +1079,13 @@ def read_geojson(path_or_str, index=None):
     props.index.name = name
     geoms.index.name = name
 
-    return VectorLayer(geoms, proj, geoms.index), props
+    return VectorLayer(geoms, proj=proj), props
 
 
 def from_series(geom_series, proj=None):
-    """Create a VectorLayer from a pandas.Series object
+    """Create a VectorLayer from a pandas.Series object.  If
+    the geometries do not have an spatial reference, EPSG:4326
+    is assumed.
 
     Parameters
     ----------
@@ -1135,8 +1102,8 @@ def from_series(geom_series, proj=None):
 
     """
 
-    fids = range(len(geom_series))
     proj = ut.projection_from_string() if proj is None else proj
-    features = [to_feature(shp, fid, proj=proj) for shp, fid
-                in zip(geom_series, fids)]
-    return VectorLayer(features, proj, geom_series.index)
+    geoms = geom_series.map(lambda x: to_geometry(x, proj=proj))
+    #pd.Series([to_geometry(g, proj=proj) for g in geom_series],
+    #                  inde
+    return VectorLayer(geoms, proj=proj)
