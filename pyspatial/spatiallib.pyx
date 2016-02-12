@@ -187,9 +187,10 @@ cdef LatLon from_latlon(double latitude, double longitude):
 
     return LatLon(easting, northing)
 
-
-@cython.boundscheck(False)
-cpdef to_utm(np.float64_t lon, np.float64_t lat):
+# Note, had to elevation because shapely can give coordinates
+# in 2 or 3 dimensions when using ops.transform
+def to_utm(np.float64_t lon, np.float64_t lat, ele=None):
+    """Compute the coordinates in UTM, will ignore elevation"""
     latlon = from_latlon(lat, lon)
     return latlon.lon, latlon.lat
 

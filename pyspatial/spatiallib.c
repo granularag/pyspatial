@@ -1195,7 +1195,6 @@ static PyObject *__pyx_f_9pyspatial_10spatiallib_adjust_coords(PyObject *, float
 static int __pyx_f_9pyspatial_10spatiallib_latlon_to_zone_number(double, double); /*proto*/
 static double __pyx_f_9pyspatial_10spatiallib_zone_number_to_central_longitude(int); /*proto*/
 static struct __pyx_t_9pyspatial_10spatiallib_LatLon __pyx_f_9pyspatial_10spatiallib_from_latlon(double, double); /*proto*/
-static PyObject *__pyx_f_9pyspatial_10spatiallib_to_utm(__pyx_t_5numpy_float64_t, __pyx_t_5numpy_float64_t, int __pyx_skip_dispatch); /*proto*/
 static __Pyx_TypeInfo __Pyx_TypeInfo_nn___pyx_t_9pyspatial_10spatiallib_DTYPE_t = { "DTYPE_t", NULL, sizeof(__pyx_t_9pyspatial_10spatiallib_DTYPE_t), { 0 }, 0, IS_UNSIGNED(__pyx_t_9pyspatial_10spatiallib_DTYPE_t) ? 'U' : 'I', IS_UNSIGNED(__pyx_t_9pyspatial_10spatiallib_DTYPE_t), 0 };
 static __Pyx_TypeInfo __Pyx_TypeInfo_nn___pyx_t_5numpy_float64_t = { "float64_t", NULL, sizeof(__pyx_t_5numpy_float64_t), { 0 }, 0, 'R', 0, 0 };
 #define __Pyx_MODULE_NAME "pyspatial.spatiallib"
@@ -1211,7 +1210,7 @@ static PyObject *__pyx_pf_9pyspatial_10spatiallib_2to_pixels(CYTHON_UNUSED PyObj
 static PyObject *__pyx_pf_9pyspatial_10spatiallib_4grid_for_pixel(CYTHON_UNUSED PyObject *__pyx_self, int __pyx_v_grid_size, __pyx_t_5numpy_int_t __pyx_v_x, __pyx_t_5numpy_int_t __pyx_v_y); /* proto */
 static PyObject *__pyx_pf_9pyspatial_10spatiallib_6sub(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_tup, float __pyx_v_minx, float __pyx_v_miny); /* proto */
 static PyObject *__pyx_pf_9pyspatial_10spatiallib_8adjust_coords(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_geom, float __pyx_v_minx, float __pyx_v_miny); /* proto */
-static PyObject *__pyx_pf_9pyspatial_10spatiallib_10to_utm(CYTHON_UNUSED PyObject *__pyx_self, __pyx_t_5numpy_float64_t __pyx_v_lon, __pyx_t_5numpy_float64_t __pyx_v_lat); /* proto */
+static PyObject *__pyx_pf_9pyspatial_10spatiallib_10to_utm(CYTHON_UNUSED PyObject *__pyx_self, __pyx_t_5numpy_float64_t __pyx_v_lon, __pyx_t_5numpy_float64_t __pyx_v_lat, CYTHON_UNUSED PyObject *__pyx_v_ele); /* proto */
 static PyObject *__pyx_pf_9pyspatial_10spatiallib_12haversine(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_coord1, PyObject *__pyx_v_coord2); /* proto */
 static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, Py_buffer *__pyx_v_info, int __pyx_v_flags); /* proto */
 static void __pyx_pf_5numpy_7ndarray_2__releasebuffer__(PyArrayObject *__pyx_v_self, Py_buffer *__pyx_v_info); /* proto */
@@ -1239,6 +1238,7 @@ static char __pyx_k_Zg[] = "Zg";
 static char __pyx_k_np[] = "np";
 static char __pyx_k_pi[] = "pi";
 static char __pyx_k_arc[] = "arc";
+static char __pyx_k_ele[] = "ele";
 static char __pyx_k_get[] = "get";
 static char __pyx_k_img[] = "img";
 static char __pyx_k_lat[] = "lat";
@@ -1277,11 +1277,13 @@ static char __pyx_k_coord2[] = "coord2";
 static char __pyx_k_ctypes[] = "ctypes";
 static char __pyx_k_import[] = "__import__";
 static char __pyx_k_lat_px[] = "lat_px";
+static char __pyx_k_latlon[] = "latlon";
 static char __pyx_k_lon_px[] = "lon_px";
 static char __pyx_k_maxLat[] = "maxLat";
 static char __pyx_k_minLon[] = "minLon";
 static char __pyx_k_theta1[] = "theta1";
 static char __pyx_k_theta2[] = "theta2";
+static char __pyx_k_to_utm[] = "to_utm";
 static char __pyx_k_x_grid[] = "x_grid";
 static char __pyx_k_xrange[] = "xrange";
 static char __pyx_k_y_grid[] = "y_grid";
@@ -1302,7 +1304,7 @@ static char __pyx_k_array_interface[] = "__array_interface__";
 static char __pyx_k_create_image_array[] = "create_image_array";
 static char __pyx_k_pyspatial_spatiallib[] = "pyspatial.spatiallib";
 static char __pyx_k_ndarray_is_not_C_contiguous[] = "ndarray is not C contiguous";
-static char __pyx_k_Users_aman_dev_ana_spatial_pysp[] = "/Users/aman/dev/ana-spatial/pyspatial/spatiallib.pyx";
+static char __pyx_k_Users_aman_dev_pyspatial_pyspat[] = "/Users/aman/dev/pyspatial/pyspatial/spatiallib.pyx";
 static char __pyx_k_unknown_dtype_code_in_numpy_pxd[] = "unknown dtype code in numpy.pxd (%d)";
 static char __pyx_k_Format_string_allocated_too_shor[] = "Format string allocated too short, see comment in numpy.pxd";
 static char __pyx_k_Invalid_latitude_should_be_betwe[] = "Invalid latitude (should be between +/- 90)";
@@ -1318,7 +1320,7 @@ static PyObject *__pyx_kp_s_Invalid_latitude_should_be_betwe;
 static PyObject *__pyx_kp_s_Invalid_longitude_should_be_betw;
 static PyObject *__pyx_kp_u_Non_native_byte_order_not_suppor;
 static PyObject *__pyx_n_s_RuntimeError;
-static PyObject *__pyx_kp_s_Users_aman_dev_ana_spatial_pysp;
+static PyObject *__pyx_kp_s_Users_aman_dev_pyspatial_pyspat;
 static PyObject *__pyx_n_s_ValueError;
 static PyObject *__pyx_n_s_addressof;
 static PyObject *__pyx_n_s_arc;
@@ -1331,6 +1333,7 @@ static PyObject *__pyx_n_s_create_image_array;
 static PyObject *__pyx_n_s_ctypes;
 static PyObject *__pyx_n_s_data;
 static PyObject *__pyx_n_s_dtype;
+static PyObject *__pyx_n_s_ele;
 static PyObject *__pyx_n_s_float64;
 static PyObject *__pyx_n_s_geom;
 static PyObject *__pyx_n_s_get;
@@ -1346,6 +1349,7 @@ static PyObject *__pyx_n_s_lat1;
 static PyObject *__pyx_n_s_lat2;
 static PyObject *__pyx_n_s_lat_px;
 static PyObject *__pyx_n_s_lat_px_size;
+static PyObject *__pyx_n_s_latlon;
 static PyObject *__pyx_n_s_lng1;
 static PyObject *__pyx_n_s_lng2;
 static PyObject *__pyx_n_s_lon;
@@ -1378,6 +1382,7 @@ static PyObject *__pyx_n_s_test;
 static PyObject *__pyx_n_s_theta1;
 static PyObject *__pyx_n_s_theta2;
 static PyObject *__pyx_n_s_to_pixels;
+static PyObject *__pyx_n_s_to_utm;
 static PyObject *__pyx_n_s_tup;
 static PyObject *__pyx_n_s_uint8;
 static PyObject *__pyx_kp_u_unknown_dtype_code_in_numpy_pxd;
@@ -1409,11 +1414,13 @@ static PyObject *__pyx_tuple__13;
 static PyObject *__pyx_tuple__15;
 static PyObject *__pyx_tuple__17;
 static PyObject *__pyx_tuple__19;
+static PyObject *__pyx_tuple__21;
 static PyObject *__pyx_codeobj__12;
 static PyObject *__pyx_codeobj__14;
 static PyObject *__pyx_codeobj__16;
 static PyObject *__pyx_codeobj__18;
 static PyObject *__pyx_codeobj__20;
+static PyObject *__pyx_codeobj__22;
 
 /* "pyspatial/spatiallib.pyx":18
  * import math
@@ -3500,7 +3507,7 @@ static struct __pyx_t_9pyspatial_10spatiallib_LatLon __pyx_f_9pyspatial_10spatia
  * 
  *     return LatLon(easting, northing)             # <<<<<<<<<<<<<<
  * 
- * 
+ * # Note, had to elevation because shapely can give coordinates
  */
   __pyx_t_2.lat = __pyx_v_easting;
   __pyx_t_2.lon = __pyx_v_northing;
@@ -3522,85 +3529,21 @@ static struct __pyx_t_9pyspatial_10spatiallib_LatLon __pyx_f_9pyspatial_10spatia
 }
 
 /* "pyspatial/spatiallib.pyx":192
- * 
- * @cython.boundscheck(False)
- * cpdef to_utm(np.float64_t lon, np.float64_t lat):             # <<<<<<<<<<<<<<
+ * # Note, had to elevation because shapely can give coordinates
+ * # in 2 or 3 dimensions when using ops.transform
+ * def to_utm(np.float64_t lon, np.float64_t lat, ele=None):             # <<<<<<<<<<<<<<
+ *     """Compute the coordinates in UTM, will ignore elevation"""
  *     latlon = from_latlon(lat, lon)
- *     return latlon.lon, latlon.lat
  */
-
-static PyObject *__pyx_pw_9pyspatial_10spatiallib_11to_utm(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static PyObject *__pyx_f_9pyspatial_10spatiallib_to_utm(__pyx_t_5numpy_float64_t __pyx_v_lon, __pyx_t_5numpy_float64_t __pyx_v_lat, CYTHON_UNUSED int __pyx_skip_dispatch) {
-  struct __pyx_t_9pyspatial_10spatiallib_LatLon __pyx_v_latlon;
-  PyObject *__pyx_r = NULL;
-  __Pyx_RefNannyDeclarations
-  PyObject *__pyx_t_1 = NULL;
-  PyObject *__pyx_t_2 = NULL;
-  PyObject *__pyx_t_3 = NULL;
-  int __pyx_lineno = 0;
-  const char *__pyx_filename = NULL;
-  int __pyx_clineno = 0;
-  __Pyx_RefNannySetupContext("to_utm", 0);
-
-  /* "pyspatial/spatiallib.pyx":193
- * @cython.boundscheck(False)
- * cpdef to_utm(np.float64_t lon, np.float64_t lat):
- *     latlon = from_latlon(lat, lon)             # <<<<<<<<<<<<<<
- *     return latlon.lon, latlon.lat
- * 
- */
-  __pyx_v_latlon = __pyx_f_9pyspatial_10spatiallib_from_latlon(__pyx_v_lat, __pyx_v_lon);
-
-  /* "pyspatial/spatiallib.pyx":194
- * cpdef to_utm(np.float64_t lon, np.float64_t lat):
- *     latlon = from_latlon(lat, lon)
- *     return latlon.lon, latlon.lat             # <<<<<<<<<<<<<<
- * 
- * def haversine(tuple coord1, tuple coord2):
- */
-  __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = PyFloat_FromDouble(__pyx_v_latlon.lon); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 194; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = PyFloat_FromDouble(__pyx_v_latlon.lat); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 194; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = PyTuple_New(2); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 194; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __Pyx_GOTREF(__pyx_t_3);
-  PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_t_1);
-  __Pyx_GIVEREF(__pyx_t_1);
-  PyTuple_SET_ITEM(__pyx_t_3, 1, __pyx_t_2);
-  __Pyx_GIVEREF(__pyx_t_2);
-  __pyx_t_1 = 0;
-  __pyx_t_2 = 0;
-  __pyx_r = __pyx_t_3;
-  __pyx_t_3 = 0;
-  goto __pyx_L0;
-
-  /* "pyspatial/spatiallib.pyx":192
- * 
- * @cython.boundscheck(False)
- * cpdef to_utm(np.float64_t lon, np.float64_t lat):             # <<<<<<<<<<<<<<
- *     latlon = from_latlon(lat, lon)
- *     return latlon.lon, latlon.lat
- */
-
-  /* function exit code */
-  __pyx_L1_error:;
-  __Pyx_XDECREF(__pyx_t_1);
-  __Pyx_XDECREF(__pyx_t_2);
-  __Pyx_XDECREF(__pyx_t_3);
-  __Pyx_AddTraceback("pyspatial.spatiallib.to_utm", __pyx_clineno, __pyx_lineno, __pyx_filename);
-  __pyx_r = 0;
-  __pyx_L0:;
-  __Pyx_XGIVEREF(__pyx_r);
-  __Pyx_RefNannyFinishContext();
-  return __pyx_r;
-}
 
 /* Python wrapper */
 static PyObject *__pyx_pw_9pyspatial_10spatiallib_11to_utm(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static char __pyx_doc_9pyspatial_10spatiallib_10to_utm[] = "Compute the coordinates in UTM, will ignore elevation";
+static PyMethodDef __pyx_mdef_9pyspatial_10spatiallib_11to_utm = {"to_utm", (PyCFunction)__pyx_pw_9pyspatial_10spatiallib_11to_utm, METH_VARARGS|METH_KEYWORDS, __pyx_doc_9pyspatial_10spatiallib_10to_utm};
 static PyObject *__pyx_pw_9pyspatial_10spatiallib_11to_utm(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   __pyx_t_5numpy_float64_t __pyx_v_lon;
   __pyx_t_5numpy_float64_t __pyx_v_lat;
+  CYTHON_UNUSED PyObject *__pyx_v_ele = 0;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
@@ -3608,12 +3551,14 @@ static PyObject *__pyx_pw_9pyspatial_10spatiallib_11to_utm(PyObject *__pyx_self,
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("to_utm (wrapper)", 0);
   {
-    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_lon,&__pyx_n_s_lat,0};
-    PyObject* values[2] = {0,0};
+    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_lon,&__pyx_n_s_lat,&__pyx_n_s_ele,0};
+    PyObject* values[3] = {0,0,0};
+    values[2] = ((PyObject *)Py_None);
     if (unlikely(__pyx_kwds)) {
       Py_ssize_t kw_args;
       const Py_ssize_t pos_args = PyTuple_GET_SIZE(__pyx_args);
       switch (pos_args) {
+        case  3: values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
         case  2: values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
         case  1: values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
         case  0: break;
@@ -3627,54 +3572,103 @@ static PyObject *__pyx_pw_9pyspatial_10spatiallib_11to_utm(PyObject *__pyx_self,
         case  1:
         if (likely((values[1] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_lat)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("to_utm", 1, 2, 2, 1); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 192; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+          __Pyx_RaiseArgtupleInvalid("to_utm", 0, 2, 3, 1); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 192; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+        }
+        case  2:
+        if (kw_args > 0) {
+          PyObject* value = PyDict_GetItem(__pyx_kwds, __pyx_n_s_ele);
+          if (value) { values[2] = value; kw_args--; }
         }
       }
       if (unlikely(kw_args > 0)) {
         if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "to_utm") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 192; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
       }
-    } else if (PyTuple_GET_SIZE(__pyx_args) != 2) {
-      goto __pyx_L5_argtuple_error;
     } else {
-      values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
-      values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
+      switch (PyTuple_GET_SIZE(__pyx_args)) {
+        case  3: values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
+        case  2: values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
+        values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
+        break;
+        default: goto __pyx_L5_argtuple_error;
+      }
     }
     __pyx_v_lon = __pyx_PyFloat_AsDouble(values[0]); if (unlikely((__pyx_v_lon == (npy_float64)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 192; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
     __pyx_v_lat = __pyx_PyFloat_AsDouble(values[1]); if (unlikely((__pyx_v_lat == (npy_float64)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 192; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+    __pyx_v_ele = values[2];
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("to_utm", 1, 2, 2, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 192; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+  __Pyx_RaiseArgtupleInvalid("to_utm", 0, 2, 3, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 192; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
   __pyx_L3_error:;
   __Pyx_AddTraceback("pyspatial.spatiallib.to_utm", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_9pyspatial_10spatiallib_10to_utm(__pyx_self, __pyx_v_lon, __pyx_v_lat);
+  __pyx_r = __pyx_pf_9pyspatial_10spatiallib_10to_utm(__pyx_self, __pyx_v_lon, __pyx_v_lat, __pyx_v_ele);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_9pyspatial_10spatiallib_10to_utm(CYTHON_UNUSED PyObject *__pyx_self, __pyx_t_5numpy_float64_t __pyx_v_lon, __pyx_t_5numpy_float64_t __pyx_v_lat) {
+static PyObject *__pyx_pf_9pyspatial_10spatiallib_10to_utm(CYTHON_UNUSED PyObject *__pyx_self, __pyx_t_5numpy_float64_t __pyx_v_lon, __pyx_t_5numpy_float64_t __pyx_v_lat, CYTHON_UNUSED PyObject *__pyx_v_ele) {
+  struct __pyx_t_9pyspatial_10spatiallib_LatLon __pyx_v_latlon;
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
+  PyObject *__pyx_t_2 = NULL;
+  PyObject *__pyx_t_3 = NULL;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("to_utm", 0);
+
+  /* "pyspatial/spatiallib.pyx":194
+ * def to_utm(np.float64_t lon, np.float64_t lat, ele=None):
+ *     """Compute the coordinates in UTM, will ignore elevation"""
+ *     latlon = from_latlon(lat, lon)             # <<<<<<<<<<<<<<
+ *     return latlon.lon, latlon.lat
+ * 
+ */
+  __pyx_v_latlon = __pyx_f_9pyspatial_10spatiallib_from_latlon(__pyx_v_lat, __pyx_v_lon);
+
+  /* "pyspatial/spatiallib.pyx":195
+ *     """Compute the coordinates in UTM, will ignore elevation"""
+ *     latlon = from_latlon(lat, lon)
+ *     return latlon.lon, latlon.lat             # <<<<<<<<<<<<<<
+ * 
+ * def haversine(tuple coord1, tuple coord2):
+ */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __pyx_f_9pyspatial_10spatiallib_to_utm(__pyx_v_lon, __pyx_v_lat, 0); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 192; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = PyFloat_FromDouble(__pyx_v_latlon.lon); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 195; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_r = __pyx_t_1;
+  __pyx_t_2 = PyFloat_FromDouble(__pyx_v_latlon.lat); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 195; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_GOTREF(__pyx_t_2);
+  __pyx_t_3 = PyTuple_New(2); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 195; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_GOTREF(__pyx_t_3);
+  PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_t_1);
+  __Pyx_GIVEREF(__pyx_t_1);
+  PyTuple_SET_ITEM(__pyx_t_3, 1, __pyx_t_2);
+  __Pyx_GIVEREF(__pyx_t_2);
   __pyx_t_1 = 0;
+  __pyx_t_2 = 0;
+  __pyx_r = __pyx_t_3;
+  __pyx_t_3 = 0;
   goto __pyx_L0;
+
+  /* "pyspatial/spatiallib.pyx":192
+ * # Note, had to elevation because shapely can give coordinates
+ * # in 2 or 3 dimensions when using ops.transform
+ * def to_utm(np.float64_t lon, np.float64_t lat, ele=None):             # <<<<<<<<<<<<<<
+ *     """Compute the coordinates in UTM, will ignore elevation"""
+ *     latlon = from_latlon(lat, lon)
+ */
 
   /* function exit code */
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_1);
+  __Pyx_XDECREF(__pyx_t_2);
+  __Pyx_XDECREF(__pyx_t_3);
   __Pyx_AddTraceback("pyspatial.spatiallib.to_utm", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
@@ -3683,7 +3677,7 @@ static PyObject *__pyx_pf_9pyspatial_10spatiallib_10to_utm(CYTHON_UNUSED PyObjec
   return __pyx_r;
 }
 
-/* "pyspatial/spatiallib.pyx":196
+/* "pyspatial/spatiallib.pyx":197
  *     return latlon.lon, latlon.lat
  * 
  * def haversine(tuple coord1, tuple coord2):             # <<<<<<<<<<<<<<
@@ -3724,11 +3718,11 @@ static PyObject *__pyx_pw_9pyspatial_10spatiallib_13haversine(PyObject *__pyx_se
         case  1:
         if (likely((values[1] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_coord2)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("haversine", 1, 2, 2, 1); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 196; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+          __Pyx_RaiseArgtupleInvalid("haversine", 1, 2, 2, 1); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 197; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "haversine") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 196; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "haversine") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 197; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 2) {
       goto __pyx_L5_argtuple_error;
@@ -3741,14 +3735,14 @@ static PyObject *__pyx_pw_9pyspatial_10spatiallib_13haversine(PyObject *__pyx_se
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("haversine", 1, 2, 2, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 196; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+  __Pyx_RaiseArgtupleInvalid("haversine", 1, 2, 2, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 197; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
   __pyx_L3_error:;
   __Pyx_AddTraceback("pyspatial.spatiallib.haversine", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_coord1), (&PyTuple_Type), 1, "coord1", 1))) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 196; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_coord2), (&PyTuple_Type), 1, "coord2", 1))) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 196; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_coord1), (&PyTuple_Type), 1, "coord1", 1))) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 197; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_coord2), (&PyTuple_Type), 1, "coord2", 1))) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 197; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_r = __pyx_pf_9pyspatial_10spatiallib_12haversine(__pyx_self, __pyx_v_coord1, __pyx_v_coord2);
 
   /* function exit code */
@@ -3784,7 +3778,7 @@ static PyObject *__pyx_pf_9pyspatial_10spatiallib_12haversine(CYTHON_UNUSED PyOb
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("haversine", 0);
 
-  /* "pyspatial/spatiallib.pyx":203
+  /* "pyspatial/spatiallib.pyx":204
  *     cdef double lat2
  *     cdef double lng2
  *     lng1, lat1 = coord1             # <<<<<<<<<<<<<<
@@ -3801,7 +3795,7 @@ static PyObject *__pyx_pf_9pyspatial_10spatiallib_12haversine(CYTHON_UNUSED PyOb
     if (unlikely(size != 2)) {
       if (size > 2) __Pyx_RaiseTooManyValuesError(2);
       else if (size >= 0) __Pyx_RaiseNeedMoreValuesError(size);
-      {__pyx_filename = __pyx_f[0]; __pyx_lineno = 203; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      {__pyx_filename = __pyx_f[0]; __pyx_lineno = 204; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     }
     #if CYTHON_COMPILING_IN_CPYTHON
     __pyx_t_1 = PyTuple_GET_ITEM(sequence, 0); 
@@ -3809,22 +3803,22 @@ static PyObject *__pyx_pf_9pyspatial_10spatiallib_12haversine(CYTHON_UNUSED PyOb
     __Pyx_INCREF(__pyx_t_1);
     __Pyx_INCREF(__pyx_t_2);
     #else
-    __pyx_t_1 = PySequence_ITEM(sequence, 0); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 203; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_1 = PySequence_ITEM(sequence, 0); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 204; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_2 = PySequence_ITEM(sequence, 1); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 203; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_2 = PySequence_ITEM(sequence, 1); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 204; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_2);
     #endif
   } else {
-    __Pyx_RaiseNoneNotIterableError(); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 203; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __Pyx_RaiseNoneNotIterableError(); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 204; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   }
-  __pyx_t_3 = __pyx_PyFloat_AsDouble(__pyx_t_1); if (unlikely((__pyx_t_3 == (double)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 203; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_3 = __pyx_PyFloat_AsDouble(__pyx_t_1); if (unlikely((__pyx_t_3 == (double)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 204; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_4 = __pyx_PyFloat_AsDouble(__pyx_t_2); if (unlikely((__pyx_t_4 == (double)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 203; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_4 = __pyx_PyFloat_AsDouble(__pyx_t_2); if (unlikely((__pyx_t_4 == (double)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 204; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __pyx_v_lng1 = __pyx_t_3;
   __pyx_v_lat1 = __pyx_t_4;
 
-  /* "pyspatial/spatiallib.pyx":204
+  /* "pyspatial/spatiallib.pyx":205
  *     cdef double lng2
  *     lng1, lat1 = coord1
  *     lng2, lat2 = coord2             # <<<<<<<<<<<<<<
@@ -3841,7 +3835,7 @@ static PyObject *__pyx_pf_9pyspatial_10spatiallib_12haversine(CYTHON_UNUSED PyOb
     if (unlikely(size != 2)) {
       if (size > 2) __Pyx_RaiseTooManyValuesError(2);
       else if (size >= 0) __Pyx_RaiseNeedMoreValuesError(size);
-      {__pyx_filename = __pyx_f[0]; __pyx_lineno = 204; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      {__pyx_filename = __pyx_f[0]; __pyx_lineno = 205; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     }
     #if CYTHON_COMPILING_IN_CPYTHON
     __pyx_t_2 = PyTuple_GET_ITEM(sequence, 0); 
@@ -3849,22 +3843,22 @@ static PyObject *__pyx_pf_9pyspatial_10spatiallib_12haversine(CYTHON_UNUSED PyOb
     __Pyx_INCREF(__pyx_t_2);
     __Pyx_INCREF(__pyx_t_1);
     #else
-    __pyx_t_2 = PySequence_ITEM(sequence, 0); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 204; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_2 = PySequence_ITEM(sequence, 0); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 205; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_1 = PySequence_ITEM(sequence, 1); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 204; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_1 = PySequence_ITEM(sequence, 1); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 205; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_1);
     #endif
   } else {
-    __Pyx_RaiseNoneNotIterableError(); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 204; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __Pyx_RaiseNoneNotIterableError(); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 205; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   }
-  __pyx_t_4 = __pyx_PyFloat_AsDouble(__pyx_t_2); if (unlikely((__pyx_t_4 == (double)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 204; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_4 = __pyx_PyFloat_AsDouble(__pyx_t_2); if (unlikely((__pyx_t_4 == (double)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 205; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_3 = __pyx_PyFloat_AsDouble(__pyx_t_1); if (unlikely((__pyx_t_3 == (double)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 204; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_3 = __pyx_PyFloat_AsDouble(__pyx_t_1); if (unlikely((__pyx_t_3 == (double)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 205; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_lng2 = __pyx_t_4;
   __pyx_v_lat2 = __pyx_t_3;
 
-  /* "pyspatial/spatiallib.pyx":206
+  /* "pyspatial/spatiallib.pyx":207
  *     lng2, lat2 = coord2
  * 
  *     if lat1 > 90 or lat1 < -90 or lat2 > 90 or lat2 < -90:             # <<<<<<<<<<<<<<
@@ -3894,21 +3888,21 @@ static PyObject *__pyx_pf_9pyspatial_10spatiallib_12haversine(CYTHON_UNUSED PyOb
   __pyx_L4_bool_binop_done:;
   if (__pyx_t_5) {
 
-    /* "pyspatial/spatiallib.pyx":207
+    /* "pyspatial/spatiallib.pyx":208
  * 
  *     if lat1 > 90 or lat1 < -90 or lat2 > 90 or lat2 < -90:
  *         raise ValueError("Invalid latitude (should be between +/- 90)")             # <<<<<<<<<<<<<<
  *     if lng1 > 180 or lng1 < -180 or lng2 > 180 or lng2 < -180:
  *         raise ValueError("Invalid longitude (should be between +/- 180)")
  */
-    __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_ValueError, __pyx_tuple__3, NULL); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 207; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_ValueError, __pyx_tuple__3, NULL); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 208; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_Raise(__pyx_t_1, 0, 0, 0);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    {__pyx_filename = __pyx_f[0]; __pyx_lineno = 207; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    {__pyx_filename = __pyx_f[0]; __pyx_lineno = 208; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   }
 
-  /* "pyspatial/spatiallib.pyx":208
+  /* "pyspatial/spatiallib.pyx":209
  *     if lat1 > 90 or lat1 < -90 or lat2 > 90 or lat2 < -90:
  *         raise ValueError("Invalid latitude (should be between +/- 90)")
  *     if lng1 > 180 or lng1 < -180 or lng2 > 180 or lng2 < -180:             # <<<<<<<<<<<<<<
@@ -3938,21 +3932,21 @@ static PyObject *__pyx_pf_9pyspatial_10spatiallib_12haversine(CYTHON_UNUSED PyOb
   __pyx_L9_bool_binop_done:;
   if (__pyx_t_5) {
 
-    /* "pyspatial/spatiallib.pyx":209
+    /* "pyspatial/spatiallib.pyx":210
  *         raise ValueError("Invalid latitude (should be between +/- 90)")
  *     if lng1 > 180 or lng1 < -180 or lng2 > 180 or lng2 < -180:
  *         raise ValueError("Invalid longitude (should be between +/- 180)")             # <<<<<<<<<<<<<<
  * 
  *     cdef double ph1
  */
-    __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_ValueError, __pyx_tuple__4, NULL); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 209; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_ValueError, __pyx_tuple__4, NULL); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 210; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_Raise(__pyx_t_1, 0, 0, 0);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    {__pyx_filename = __pyx_f[0]; __pyx_lineno = 209; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    {__pyx_filename = __pyx_f[0]; __pyx_lineno = 210; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   }
 
-  /* "pyspatial/spatiallib.pyx":218
+  /* "pyspatial/spatiallib.pyx":219
  *     cdef double arc
  * 
  *     phi1 = (90.0 - lat1) * 0.0174532925             # <<<<<<<<<<<<<<
@@ -3961,7 +3955,7 @@ static PyObject *__pyx_pf_9pyspatial_10spatiallib_12haversine(CYTHON_UNUSED PyOb
  */
   __pyx_v_phi1 = ((90.0 - __pyx_v_lat1) * 0.0174532925);
 
-  /* "pyspatial/spatiallib.pyx":219
+  /* "pyspatial/spatiallib.pyx":220
  * 
  *     phi1 = (90.0 - lat1) * 0.0174532925
  *     phi2 = (90.0 - lat2) * 0.0174532925             # <<<<<<<<<<<<<<
@@ -3970,7 +3964,7 @@ static PyObject *__pyx_pf_9pyspatial_10spatiallib_12haversine(CYTHON_UNUSED PyOb
  */
   __pyx_v_phi2 = ((90.0 - __pyx_v_lat2) * 0.0174532925);
 
-  /* "pyspatial/spatiallib.pyx":220
+  /* "pyspatial/spatiallib.pyx":221
  *     phi1 = (90.0 - lat1) * 0.0174532925
  *     phi2 = (90.0 - lat2) * 0.0174532925
  *     theta1 = lng1 * 0.0174532925             # <<<<<<<<<<<<<<
@@ -3979,7 +3973,7 @@ static PyObject *__pyx_pf_9pyspatial_10spatiallib_12haversine(CYTHON_UNUSED PyOb
  */
   __pyx_v_theta1 = (__pyx_v_lng1 * 0.0174532925);
 
-  /* "pyspatial/spatiallib.pyx":221
+  /* "pyspatial/spatiallib.pyx":222
  *     phi2 = (90.0 - lat2) * 0.0174532925
  *     theta1 = lng1 * 0.0174532925
  *     theta2 = lng2 * 0.0174532925             # <<<<<<<<<<<<<<
@@ -3988,7 +3982,7 @@ static PyObject *__pyx_pf_9pyspatial_10spatiallib_12haversine(CYTHON_UNUSED PyOb
  */
   __pyx_v_theta2 = (__pyx_v_lng2 * 0.0174532925);
 
-  /* "pyspatial/spatiallib.pyx":223
+  /* "pyspatial/spatiallib.pyx":224
  *     theta2 = lng2 * 0.0174532925
  * 
  *     c = (sin(phi1) * sin(phi2) * cos(theta1 - theta2) + cos(phi1) * cos(phi2))             # <<<<<<<<<<<<<<
@@ -3997,7 +3991,7 @@ static PyObject *__pyx_pf_9pyspatial_10spatiallib_12haversine(CYTHON_UNUSED PyOb
  */
   __pyx_v_c = (((sin(__pyx_v_phi1) * sin(__pyx_v_phi2)) * cos((__pyx_v_theta1 - __pyx_v_theta2))) + (cos(__pyx_v_phi1) * cos(__pyx_v_phi2)));
 
-  /* "pyspatial/spatiallib.pyx":224
+  /* "pyspatial/spatiallib.pyx":225
  * 
  *     c = (sin(phi1) * sin(phi2) * cos(theta1 - theta2) + cos(phi1) * cos(phi2))
  *     arc = acos(c)             # <<<<<<<<<<<<<<
@@ -4005,19 +3999,19 @@ static PyObject *__pyx_pf_9pyspatial_10spatiallib_12haversine(CYTHON_UNUSED PyOb
  */
   __pyx_v_arc = acos(__pyx_v_c);
 
-  /* "pyspatial/spatiallib.pyx":225
+  /* "pyspatial/spatiallib.pyx":226
  *     c = (sin(phi1) * sin(phi2) * cos(theta1 - theta2) + cos(phi1) * cos(phi2))
  *     arc = acos(c)
  *     return arc * 6367444.7             # <<<<<<<<<<<<<<
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = PyFloat_FromDouble((__pyx_v_arc * 6367444.7)); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 225; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = PyFloat_FromDouble((__pyx_v_arc * 6367444.7)); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 226; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "pyspatial/spatiallib.pyx":196
+  /* "pyspatial/spatiallib.pyx":197
  *     return latlon.lon, latlon.lat
  * 
  * def haversine(tuple coord1, tuple coord2):             # <<<<<<<<<<<<<<
@@ -4036,14 +4030,6 @@ static PyObject *__pyx_pf_9pyspatial_10spatiallib_12haversine(CYTHON_UNUSED PyOb
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
-
-/* "../../.virtualenvs/granular/lib/python2.7/site-packages/Cython/Includes/numpy/__init__.pxd":197
- *         # experimental exception made for __getbuffer__ and __releasebuffer__
- *         # -- the details of this may change.
- *         def __getbuffer__(ndarray self, Py_buffer* info, int flags):             # <<<<<<<<<<<<<<
- *             # This implementation of getbuffer is geared towards Cython
- *             # requirements, and does not yet fullfill the PEP.
- */
 
 /* Python wrapper */
 static CYTHON_UNUSED int __pyx_pw_5numpy_7ndarray_1__getbuffer__(PyObject *__pyx_v_self, Py_buffer *__pyx_v_info, int __pyx_v_flags); /*proto*/
@@ -6041,7 +6027,6 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_get_array_base(PyArrayObject *__py
 
 static PyMethodDef __pyx_methods[] = {
   {"adjust_coords", (PyCFunction)__pyx_pw_9pyspatial_10spatiallib_9adjust_coords, METH_VARARGS|METH_KEYWORDS, 0},
-  {"to_utm", (PyCFunction)__pyx_pw_9pyspatial_10spatiallib_11to_utm, METH_VARARGS|METH_KEYWORDS, 0},
   {0, 0, 0, 0}
 };
 
@@ -6072,7 +6057,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_kp_s_Invalid_longitude_should_be_betw, __pyx_k_Invalid_longitude_should_be_betw, sizeof(__pyx_k_Invalid_longitude_should_be_betw), 0, 0, 1, 0},
   {&__pyx_kp_u_Non_native_byte_order_not_suppor, __pyx_k_Non_native_byte_order_not_suppor, sizeof(__pyx_k_Non_native_byte_order_not_suppor), 0, 1, 0, 0},
   {&__pyx_n_s_RuntimeError, __pyx_k_RuntimeError, sizeof(__pyx_k_RuntimeError), 0, 0, 1, 1},
-  {&__pyx_kp_s_Users_aman_dev_ana_spatial_pysp, __pyx_k_Users_aman_dev_ana_spatial_pysp, sizeof(__pyx_k_Users_aman_dev_ana_spatial_pysp), 0, 0, 1, 0},
+  {&__pyx_kp_s_Users_aman_dev_pyspatial_pyspat, __pyx_k_Users_aman_dev_pyspatial_pyspat, sizeof(__pyx_k_Users_aman_dev_pyspatial_pyspat), 0, 0, 1, 0},
   {&__pyx_n_s_ValueError, __pyx_k_ValueError, sizeof(__pyx_k_ValueError), 0, 0, 1, 1},
   {&__pyx_n_s_addressof, __pyx_k_addressof, sizeof(__pyx_k_addressof), 0, 0, 1, 1},
   {&__pyx_n_s_arc, __pyx_k_arc, sizeof(__pyx_k_arc), 0, 0, 1, 1},
@@ -6085,6 +6070,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_ctypes, __pyx_k_ctypes, sizeof(__pyx_k_ctypes), 0, 0, 1, 1},
   {&__pyx_n_s_data, __pyx_k_data, sizeof(__pyx_k_data), 0, 0, 1, 1},
   {&__pyx_n_s_dtype, __pyx_k_dtype, sizeof(__pyx_k_dtype), 0, 0, 1, 1},
+  {&__pyx_n_s_ele, __pyx_k_ele, sizeof(__pyx_k_ele), 0, 0, 1, 1},
   {&__pyx_n_s_float64, __pyx_k_float64, sizeof(__pyx_k_float64), 0, 0, 1, 1},
   {&__pyx_n_s_geom, __pyx_k_geom, sizeof(__pyx_k_geom), 0, 0, 1, 1},
   {&__pyx_n_s_get, __pyx_k_get, sizeof(__pyx_k_get), 0, 0, 1, 1},
@@ -6100,6 +6086,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_lat2, __pyx_k_lat2, sizeof(__pyx_k_lat2), 0, 0, 1, 1},
   {&__pyx_n_s_lat_px, __pyx_k_lat_px, sizeof(__pyx_k_lat_px), 0, 0, 1, 1},
   {&__pyx_n_s_lat_px_size, __pyx_k_lat_px_size, sizeof(__pyx_k_lat_px_size), 0, 0, 1, 1},
+  {&__pyx_n_s_latlon, __pyx_k_latlon, sizeof(__pyx_k_latlon), 0, 0, 1, 1},
   {&__pyx_n_s_lng1, __pyx_k_lng1, sizeof(__pyx_k_lng1), 0, 0, 1, 1},
   {&__pyx_n_s_lng2, __pyx_k_lng2, sizeof(__pyx_k_lng2), 0, 0, 1, 1},
   {&__pyx_n_s_lon, __pyx_k_lon, sizeof(__pyx_k_lon), 0, 0, 1, 1},
@@ -6132,6 +6119,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_theta1, __pyx_k_theta1, sizeof(__pyx_k_theta1), 0, 0, 1, 1},
   {&__pyx_n_s_theta2, __pyx_k_theta2, sizeof(__pyx_k_theta2), 0, 0, 1, 1},
   {&__pyx_n_s_to_pixels, __pyx_k_to_pixels, sizeof(__pyx_k_to_pixels), 0, 0, 1, 1},
+  {&__pyx_n_s_to_utm, __pyx_k_to_utm, sizeof(__pyx_k_to_utm), 0, 0, 1, 1},
   {&__pyx_n_s_tup, __pyx_k_tup, sizeof(__pyx_k_tup), 0, 0, 1, 1},
   {&__pyx_n_s_uint8, __pyx_k_uint8, sizeof(__pyx_k_uint8), 0, 0, 1, 1},
   {&__pyx_kp_u_unknown_dtype_code_in_numpy_pxd, __pyx_k_unknown_dtype_code_in_numpy_pxd, sizeof(__pyx_k_unknown_dtype_code_in_numpy_pxd), 0, 1, 0, 0},
@@ -6151,7 +6139,7 @@ static int __Pyx_InitCachedBuiltins(void) {
   #else
   __pyx_builtin_xrange = __Pyx_GetBuiltinName(__pyx_n_s_xrange); if (!__pyx_builtin_xrange) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 42; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   #endif
-  __pyx_builtin_ValueError = __Pyx_GetBuiltinName(__pyx_n_s_ValueError); if (!__pyx_builtin_ValueError) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 207; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_builtin_ValueError = __Pyx_GetBuiltinName(__pyx_n_s_ValueError); if (!__pyx_builtin_ValueError) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 208; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 231; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_builtin_RuntimeError = __Pyx_GetBuiltinName(__pyx_n_s_RuntimeError); if (!__pyx_builtin_RuntimeError) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 802; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   return 0;
@@ -6185,25 +6173,25 @@ static int __Pyx_InitCachedConstants(void) {
   __Pyx_GOTREF(__pyx_tuple__2);
   __Pyx_GIVEREF(__pyx_tuple__2);
 
-  /* "pyspatial/spatiallib.pyx":207
+  /* "pyspatial/spatiallib.pyx":208
  * 
  *     if lat1 > 90 or lat1 < -90 or lat2 > 90 or lat2 < -90:
  *         raise ValueError("Invalid latitude (should be between +/- 90)")             # <<<<<<<<<<<<<<
  *     if lng1 > 180 or lng1 < -180 or lng2 > 180 or lng2 < -180:
  *         raise ValueError("Invalid longitude (should be between +/- 180)")
  */
-  __pyx_tuple__3 = PyTuple_Pack(1, __pyx_kp_s_Invalid_latitude_should_be_betwe); if (unlikely(!__pyx_tuple__3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 207; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_tuple__3 = PyTuple_Pack(1, __pyx_kp_s_Invalid_latitude_should_be_betwe); if (unlikely(!__pyx_tuple__3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 208; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_tuple__3);
   __Pyx_GIVEREF(__pyx_tuple__3);
 
-  /* "pyspatial/spatiallib.pyx":209
+  /* "pyspatial/spatiallib.pyx":210
  *         raise ValueError("Invalid latitude (should be between +/- 90)")
  *     if lng1 > 180 or lng1 < -180 or lng2 > 180 or lng2 < -180:
  *         raise ValueError("Invalid longitude (should be between +/- 180)")             # <<<<<<<<<<<<<<
  * 
  *     cdef double ph1
  */
-  __pyx_tuple__4 = PyTuple_Pack(1, __pyx_kp_s_Invalid_longitude_should_be_betw); if (unlikely(!__pyx_tuple__4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 209; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_tuple__4 = PyTuple_Pack(1, __pyx_kp_s_Invalid_longitude_should_be_betw); if (unlikely(!__pyx_tuple__4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 210; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_tuple__4);
   __Pyx_GIVEREF(__pyx_tuple__4);
 
@@ -6283,7 +6271,7 @@ static int __Pyx_InitCachedConstants(void) {
   __pyx_tuple__11 = PyTuple_Pack(8, __pyx_n_s_rast, __pyx_n_s_colors, __pyx_n_s_xsize, __pyx_n_s_ysize, __pyx_n_s_i, __pyx_n_s_j, __pyx_n_s_c, __pyx_n_s_img); if (unlikely(!__pyx_tuple__11)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 33; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_tuple__11);
   __Pyx_GIVEREF(__pyx_tuple__11);
-  __pyx_codeobj__12 = (PyObject*)__Pyx_PyCode_New(2, 0, 8, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__11, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_Users_aman_dev_ana_spatial_pysp, __pyx_n_s_create_image_array, 33, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__12)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 33; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_codeobj__12 = (PyObject*)__Pyx_PyCode_New(2, 0, 8, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__11, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_Users_aman_dev_pyspatial_pyspat, __pyx_n_s_create_image_array, 33, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__12)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 33; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
 
   /* "pyspatial/spatiallib.pyx":47
  *     return img
@@ -6295,7 +6283,7 @@ static int __Pyx_InitCachedConstants(void) {
   __pyx_tuple__13 = PyTuple_Pack(8, __pyx_n_s_lon, __pyx_n_s_lat, __pyx_n_s_minLon, __pyx_n_s_maxLat, __pyx_n_s_lon_px_size, __pyx_n_s_lat_px_size, __pyx_n_s_lon_px, __pyx_n_s_lat_px); if (unlikely(!__pyx_tuple__13)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 47; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_tuple__13);
   __Pyx_GIVEREF(__pyx_tuple__13);
-  __pyx_codeobj__14 = (PyObject*)__Pyx_PyCode_New(6, 0, 8, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__13, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_Users_aman_dev_ana_spatial_pysp, __pyx_n_s_to_pixels, 47, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__14)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 47; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_codeobj__14 = (PyObject*)__Pyx_PyCode_New(6, 0, 8, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__13, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_Users_aman_dev_pyspatial_pyspat, __pyx_n_s_to_pixels, 47, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__14)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 47; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
 
   /* "pyspatial/spatiallib.pyx":53
  *     return lon_px, lat_px
@@ -6307,7 +6295,7 @@ static int __Pyx_InitCachedConstants(void) {
   __pyx_tuple__15 = PyTuple_Pack(5, __pyx_n_s_grid_size, __pyx_n_s_x, __pyx_n_s_y, __pyx_n_s_x_grid, __pyx_n_s_y_grid); if (unlikely(!__pyx_tuple__15)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 53; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_tuple__15);
   __Pyx_GIVEREF(__pyx_tuple__15);
-  __pyx_codeobj__16 = (PyObject*)__Pyx_PyCode_New(3, 0, 5, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__15, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_Users_aman_dev_ana_spatial_pysp, __pyx_n_s_grid_for_pixel, 53, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__16)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 53; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_codeobj__16 = (PyObject*)__Pyx_PyCode_New(3, 0, 5, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__15, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_Users_aman_dev_pyspatial_pyspat, __pyx_n_s_grid_for_pixel, 53, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__16)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 53; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
 
   /* "pyspatial/spatiallib.pyx":59
  * 
@@ -6319,19 +6307,31 @@ static int __Pyx_InitCachedConstants(void) {
   __pyx_tuple__17 = PyTuple_Pack(3, __pyx_n_s_tup, __pyx_n_s_minx, __pyx_n_s_miny); if (unlikely(!__pyx_tuple__17)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 59; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_tuple__17);
   __Pyx_GIVEREF(__pyx_tuple__17);
-  __pyx_codeobj__18 = (PyObject*)__Pyx_PyCode_New(3, 0, 3, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__17, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_Users_aman_dev_ana_spatial_pysp, __pyx_n_s_sub, 59, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__18)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 59; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_codeobj__18 = (PyObject*)__Pyx_PyCode_New(3, 0, 3, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__17, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_Users_aman_dev_pyspatial_pyspat, __pyx_n_s_sub, 59, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__18)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 59; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
 
-  /* "pyspatial/spatiallib.pyx":196
+  /* "pyspatial/spatiallib.pyx":192
+ * # Note, had to elevation because shapely can give coordinates
+ * # in 2 or 3 dimensions when using ops.transform
+ * def to_utm(np.float64_t lon, np.float64_t lat, ele=None):             # <<<<<<<<<<<<<<
+ *     """Compute the coordinates in UTM, will ignore elevation"""
+ *     latlon = from_latlon(lat, lon)
+ */
+  __pyx_tuple__19 = PyTuple_Pack(4, __pyx_n_s_lon, __pyx_n_s_lat, __pyx_n_s_ele, __pyx_n_s_latlon); if (unlikely(!__pyx_tuple__19)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 192; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_GOTREF(__pyx_tuple__19);
+  __Pyx_GIVEREF(__pyx_tuple__19);
+  __pyx_codeobj__20 = (PyObject*)__Pyx_PyCode_New(3, 0, 4, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__19, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_Users_aman_dev_pyspatial_pyspat, __pyx_n_s_to_utm, 192, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__20)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 192; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+
+  /* "pyspatial/spatiallib.pyx":197
  *     return latlon.lon, latlon.lat
  * 
  * def haversine(tuple coord1, tuple coord2):             # <<<<<<<<<<<<<<
  *     """Given two (lng, lat) tuples, returns the distance between them in
  *     meters."""
  */
-  __pyx_tuple__19 = PyTuple_Pack(14, __pyx_n_s_coord1, __pyx_n_s_coord2, __pyx_n_s_lat1, __pyx_n_s_lng1, __pyx_n_s_lat2, __pyx_n_s_lng2, __pyx_n_s_ph1, __pyx_n_s_ph2, __pyx_n_s_theta1, __pyx_n_s_theta2, __pyx_n_s_c, __pyx_n_s_arc, __pyx_n_s_phi1, __pyx_n_s_phi2); if (unlikely(!__pyx_tuple__19)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 196; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __Pyx_GOTREF(__pyx_tuple__19);
-  __Pyx_GIVEREF(__pyx_tuple__19);
-  __pyx_codeobj__20 = (PyObject*)__Pyx_PyCode_New(2, 0, 14, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__19, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_Users_aman_dev_ana_spatial_pysp, __pyx_n_s_haversine, 196, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__20)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 196; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_tuple__21 = PyTuple_Pack(14, __pyx_n_s_coord1, __pyx_n_s_coord2, __pyx_n_s_lat1, __pyx_n_s_lng1, __pyx_n_s_lat2, __pyx_n_s_lng2, __pyx_n_s_ph1, __pyx_n_s_ph2, __pyx_n_s_theta1, __pyx_n_s_theta2, __pyx_n_s_c, __pyx_n_s_arc, __pyx_n_s_phi1, __pyx_n_s_phi2); if (unlikely(!__pyx_tuple__21)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 197; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_GOTREF(__pyx_tuple__21);
+  __Pyx_GIVEREF(__pyx_tuple__21);
+  __pyx_codeobj__22 = (PyObject*)__Pyx_PyCode_New(2, 0, 14, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__21, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_Users_aman_dev_pyspatial_pyspat, __pyx_n_s_haversine, 197, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__22)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 197; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_RefNannyFinishContext();
   return 0;
   __pyx_L1_error:;
@@ -6787,16 +6787,28 @@ PyMODINIT_FUNC PyInit_spatiallib(void)
  */
   __pyx_v_9pyspatial_10spatiallib_R = 6378137.0;
 
-  /* "pyspatial/spatiallib.pyx":196
+  /* "pyspatial/spatiallib.pyx":192
+ * # Note, had to elevation because shapely can give coordinates
+ * # in 2 or 3 dimensions when using ops.transform
+ * def to_utm(np.float64_t lon, np.float64_t lat, ele=None):             # <<<<<<<<<<<<<<
+ *     """Compute the coordinates in UTM, will ignore elevation"""
+ *     latlon = from_latlon(lat, lon)
+ */
+  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_9pyspatial_10spatiallib_11to_utm, NULL, __pyx_n_s_pyspatial_spatiallib); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 192; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_GOTREF(__pyx_t_1);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_to_utm, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 192; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+
+  /* "pyspatial/spatiallib.pyx":197
  *     return latlon.lon, latlon.lat
  * 
  * def haversine(tuple coord1, tuple coord2):             # <<<<<<<<<<<<<<
  *     """Given two (lng, lat) tuples, returns the distance between them in
  *     meters."""
  */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_9pyspatial_10spatiallib_13haversine, NULL, __pyx_n_s_pyspatial_spatiallib); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 196; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_9pyspatial_10spatiallib_13haversine, NULL, __pyx_n_s_pyspatial_spatiallib); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 197; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_haversine, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 196; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_haversine, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 197; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
   /* "pyspatial/spatiallib.pyx":1

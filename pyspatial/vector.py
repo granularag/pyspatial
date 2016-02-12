@@ -675,15 +675,23 @@ class VectorLayer(pd.Series):
 
         return pd.Series(s, index=self.index)
 
-    def map(self, f):
-        """Apply a function, f, over all the features.  Returns
-        A pandas.Series object"""
+    def map(self, f, as_geometry=False):
+        """Apply a function, f, over all the features.
+
+
+        Returns
+        -------
+        pandas.Series(as_geometry=False) or VectorLayer(as_geometry=True)
+        """
         data = map(f, self.features)
-        return pd.Series(data, index=self.index)
+        if not as_geometry:
+            return pd.Series(data, index=self.index)
+        else:
+            return VectorLayer(data, index=self.index, proj=self.proj)
 
     def areas(self, proj=None):
         """Compute the areas for each of the shapes in the vector
-        layer
+        layer.
 
         Parameters
         ----------
@@ -693,7 +701,16 @@ class VectorLayer(pd.Series):
 
         Returns
         -------
-        pandas.Series"""
+        pandas.Series
+
+
+        Note
+        ----
+        'utm' should only be used for small polygons when centimeter
+        level accuraccy is needed.  Othewise the area will
+        be incorrect.  Similar issues can happen when polygons cross
+        utm boundaries.
+        """
         if proj is None:
             return self.map(lambda x: x.GetArea())
 
@@ -729,8 +746,16 @@ class VectorLayer(pd.Series):
 
         Returns
         -------
-        pandas.Series"""
+        pandas.Series
 
+
+        Note
+        ----
+        'utm' should only be used for small polygons when centimeter
+        level accuraccy is needed.  Othewise the area will
+        be incorrect.  Similar issues can happen when polygons cross
+        utm boundaries.
+        """
         if proj is None:
             shp = to_geometry(shp)
             return self.to_geometry(proj=proj).map(lambda x: x.Distance(shp))
