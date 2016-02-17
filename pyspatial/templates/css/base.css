@@ -1,0 +1,53 @@
+.leaflet-control {
+    opacity: 0.9;
+}
+
+.leaflet-top .leaflet-control {
+    margin-top: 20px;
+    box-shadow: 0 0 8px rgba(0,0,0,0.2);
+    font-size: 12px;
+}
+
+.info {
+    margin: ;
+    padding: 6px 8px;
+	background: white;
+	background: rgba(255,255,255,0.8);
+	border-radius: 5px;
+}
+.info h4 {
+	margin: 0 0 5px;
+	color: #777;
+}
+
+.legend {
+	text-align: left;
+	line-height: 18px;
+	color: #555;
+}
+
+.legend i {
+	width: 18px;
+	height: 16px;
+	float: left;
+	margin-right: 8px;
+	opacity: 1.0;
+}
+
+.leaflet-div-icon {
+	background: none;
+	border: 0px solid #666;
+}
+
+.key path {
+    display: none;
+}
+
+.leaflet-div-icon {
+    backround: none;
+    border: none;
+}
+
+.leaflet-div-icon p {
+    min-width: 100px;
+}
