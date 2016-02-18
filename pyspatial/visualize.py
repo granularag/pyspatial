@@ -48,7 +48,6 @@ def get_geojson_dict(geo_data):
             raise ValueError(msg)
 
     elif isinstance(geo_data, list):
-        print "Its'a list!"
         features = [to_feature(s, i) for i, s in enumerate(geo_data)]
     elif isinstance(geo_data, dict):
         if "type" not in geo_data and "features" not in geo_data:
@@ -62,12 +61,14 @@ def get_geojson_dict(geo_data):
 
 
 class HTMLMap(object):
-    def __init__(self, lat, lng, zoom=5, data=None, info_cols=None):
+    def __init__(self, lat, lng, zoom=5, data=None, info_cols=None,
+                 height="100%"):
         self.lat = lat
         self.lng = lng
         self.zoom = zoom
         self.data = data
         self.info_cols = info_cols
+        self.height=height
         self.base_layer = None
         self.choropleths = {}
         self.overlays = {}
@@ -76,7 +77,10 @@ class HTMLMap(object):
     def set_baselayer(self, geo_data):
         self.base_layer = get_geojson_dict(geo_data)
 
-    def _render(self):
+    def _render(self, height=None):
+        if height is None:
+            height = self.height
+
         env = Environment(loader=PackageLoader('pyspatial', 'templates'))
         data = {"base_layer": self.base_layer,
                 "view": {"lat": self.lat, "lng": self.lng, "zoom": self.zoom},
@@ -85,11 +89,12 @@ class HTMLMap(object):
                 "dataset": to_dict(self.data), "choropleths": self.choropleths}
 
         data_json = dumps(data)
-        self.html = env.get_template("map.html").render(DATA=data_json)
+        self.html = env.get_template("map.html").render(DATA=data_json,
+                                                        height=height)
 
     def render_ipython(self, height="500px", width="100%"):
         from IPython.display import HTML
-        self._render()
+        self._render(height=height)
         """
         Embeds the HTML source of the report directly into an IPython notebook.
         """
@@ -99,6 +104,9 @@ class HTMLMap(object):
         return HTML(iframe.format(width=width, height=height, srcdoc=srcdoc))
 
     def add_shapes(self, name, shapes, style=None):
+        """Add shapes to the map. Accepts pandas Series or list of
+        shapely or ogr.Geometry objects, or a dictionary or string
+        matching the geojson spec."""
         if style is None:
             style = {}
 
@@ -106,6 +114,7 @@ class HTMLMap(object):
                                "style": style}
 
     def add_text(self, name, points, values, style=None):
+        """Not implemented yet"""
         _style = {'background-color': 'none',
                   'font-size': '10pt',
                   'font-weight': 'bold',
@@ -123,44 +132,21 @@ class HTMLMap(object):
 
         #TODO:
         - Add style per choropleth.
+        - Add support for different discretization schemes
 
         Parameters
         ----------
-        geo_data: string or dict
-            String or dict of GeoJSON, assumes that it is uses
-            a FeatureCollection. Each feature must have an 'id'
-            attribute, and the index of data will join against
-            the 'id' attribute of the features.
+        column: str
+            The column to use for the choropleth. Must exist in the data
+            provided.
 
-        columns: list
-            The columns to use for the choropleth. Must exist in the data
-            provided or in the data set by add_data. Uses data.columns if None
-
-        n_levels: list, default None
+        levels: int, default None
             Number of levels to uses for the scale.  The allowed amount varies
-            based on the palette that is chosen (For numerical data only).
-            For categorical data, it will automatically choose the number
-            of levels (max of 12 supported).
-        palette: string or dict, default will autoselect
+            based on the palette that is chosen.
+        palette: string or dict, default will use 'Reds'
              Uses color brewer (http://colorbrewer2.org/).
-             To get a list of palettes:
-
-             >>> from folium import PALETTES
-             >>> PALETTES.keys()
-
-             If you pass a dict, data must be a DataFrame, and the keys
-             of the dict must be the columns names in data.  The values
-             must be a string of the palette you wish to use.
-        info_cols: list, default: None
-             Columns to add to the hover control
-
-        filters: dict
-             Mapping of column name -> values to filter. Creates UI filters
-             on the map.
-
-        Output
-        ------
-        GeoJSON data layer in obj.template_vars
+             If you pass a dict, the keys are the string values in the column,
+             and the values are the html hex color for that value.
         '''
 
         if self.base_layer is None:
@@ -181,6 +167,8 @@ class HTMLMap(object):
             self.choropleths[column] = {"palette": palette, "levels": levels}
 
     def save(self, path):
+        """Save the html to a file.  Can be local or s3.  If s3, assumes that
+        a .boto file exists"""
         with smart_open(path, 'wb') as outf:
             self._render()
             outf.write(self.html)
