@@ -1,4 +1,4 @@
-//Map Config
+//Map
 PL.colors.initializeColorBrewer();
 
 var DATA = JSON.parse($("#data").html());
@@ -49,7 +49,6 @@ app.controller('controller', ['$scope', '$timeout', '$http', '$q', 'tileService'
 
   for (var cp in DATA.choropleths) {
     var palette = getPalette(cp);
-    console.log(cp, palette);
     $scope.map.choropleth(DATA.base_layer, cp, palette, DATA.info_cols);
   }
   for (var o in DATA.overlays) {
