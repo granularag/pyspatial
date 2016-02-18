@@ -1,6 +1,6 @@
 <html>
   <head>
-    <link rel="stylesheet" href="https://granular-labs.s3.amazonaws.com/static/css/DatasetJS-Viz-deps-0.1.3.css" />
+    <link rel="stylesheet" href="{{ static_css }}/DatasetJS-Viz-deps-0.1.3.css" />
     <style>
       {% include 'css/table.css' %}
       {% include 'css/base.css' %}
@@ -40,9 +40,9 @@
           </button>
           <div id="lmap" style="width: 100%;"></div>
         </div>
-        <script type="text/javascript" src="https://granular-labs.s3.amazonaws.com/static/js/DatasetJS-Viz-deps-0.1.3.js"></script>
-        <script type="text/javascript" src="https://granular-labs.s3.amazonaws.com/static/js/DatasetJS-0.2.4.min.js"></script>
-        <script type="text/javascript" src="https://granular-labs.s3.amazonaws.com/static/js/DatasetJS-Viz-0.1.4.min.js"></script>
+        <script type="text/javascript" src="{{ static_js }}/DatasetJS-Viz-deps-0.1.3.js"></script>
+        <script type="text/javascript" src="{{ static_js }}/DatasetJS-0.2.4.min.js"></script>
+        <script type="text/javascript" src="{{ static_js }}/DatasetJS-Viz-0.1.5.min.js"></script>
         <script>
           {% include 'app.js' %}
         </script>

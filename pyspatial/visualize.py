@@ -5,7 +5,12 @@ import json
 
 from jinja2 import Environment, PackageLoader
 from dataset import to_dict, dumps
+from utils import projection_from_epsg
 from smart_open import smart_open
+
+STATIC_CSS = "https://granular-labs.s3.amazonaws.com/static/css"
+STATIC_JS = "https://granular-labs.s3.amazonaws.com/static/js"
+STATIC_IMG = "https://granular-labs.s3.amazonaws.com/static/img"
 
 
 def to_feature(shp, _id):
@@ -14,10 +19,16 @@ def to_feature(shp, _id):
                 "geometry": shp.__geo_interface__}
 
     elif isinstance(shp, Geometry):
+        geom = shp.Clone()
+        geom.TransformTo(projection_from_epsg())
         return {"type": "Feature", "id": _id,
-                "geometry": json.loads(shp.ExportToJson())}
+                "geometry": json.loads(geom.ExportToJson())}
+    elif pd.isnull(shp):
+        return {"type": "Feature", "id": _id,
+                "geometry": {"type": "Point",
+                             "coordinates": []}}
     else:
-        raise ValueError("Unable to shp to feature")
+        raise ValueError("Unable create feature dict from shp")
 
 
 def get_geojson_dict(geo_data):
@@ -35,15 +46,14 @@ def get_geojson_dict(geo_data):
 
     # TODO: Find a better check with isinstance
     # since that would cause a circular reference
-    # Check if vector layer
+    # in vector.py
     elif hasattr(geo_data, "proj"):
         return geo_data.dropna().to_dict()
 
     elif isinstance(geo_data, pd.Series):
         g0 = geo_data[0]
         if isinstance(g0, Geometry) or isinstance(g0, BaseGeometry):
-            features = [to_feature(s, i)
-                        for i, s in geo_data.dropna().iteritems()]
+            features = [to_feature(s, i) for i, s in geo_data.iteritems()]
         else:
             raise ValueError(msg)
 
@@ -60,19 +70,50 @@ def get_geojson_dict(geo_data):
     return {"type": "FeatureCollection", "features": features}
 
 
+def to_latlng(shp):
+    if isinstance(shp, BaseGeometry):
+        pt = to_feature(shp.centroid, 0)
+    elif isinstance(shp, Geometry):
+        pt = to_feature(shp.Centroid(), 0)
+    elif pd.isnull(shp):
+        return {"lat": None, "lng": None}
+    else:
+        raise ValueError("Unable to create latlng from shp")
+
+    return dict(zip(["lng", "lat"], pt["geometry"]["coordinates"]))
+
+
+def get_latlngs(geo_data):
+    if isinstance(geo_data, BaseGeometry) or isinstance(geo_data, Geometry):
+        return [to_latlng(geo_data)]
+
+    elif hasattr(geo_data, "__iter__") and len(geo_data) == 0:
+        return []
+
+    elif hasattr(geo_data, "__iter__"):
+        return [to_latlng(s) for i, s in geo_data.iteritems()]
+
+    else:
+        raise ValueError("Invalid geo_data")
+
+
 class HTMLMap(object):
     def __init__(self, lat, lng, zoom=5, data=None, info_cols=None,
-                 height="100%"):
+                 height="100%", static_js=STATIC_JS, static_css=STATIC_CSS,
+                 static_img=STATIC_IMG):
         self.lat = lat
         self.lng = lng
         self.zoom = zoom
         self.data = data
         self.info_cols = info_cols
-        self.height=height
+        self.height = height
         self.base_layer = None
         self.choropleths = {}
         self.overlays = {}
         self.palettes = {}
+        self.static_css = static_css
+        self.static_js = static_js
+        self.static_img = static_img
 
     def set_baselayer(self, geo_data):
         self.base_layer = get_geojson_dict(geo_data)
@@ -89,8 +130,11 @@ class HTMLMap(object):
                 "dataset": to_dict(self.data), "choropleths": self.choropleths}
 
         data_json = dumps(data)
-        self.html = env.get_template("map.html").render(DATA=data_json,
-                                                        height=height)
+        opts = dict(DATA=data_json, height=height,
+                    static_js=self.static_js, static_css=self.static_css,
+                    static_img=self.static_img)
+
+        self.html = env.get_template("map.html").render(**opts)
 
     def render_ipython(self, height="500px", width="100%"):
         from IPython.display import HTML
@@ -103,7 +147,7 @@ class HTMLMap(object):
         srcdoc = self.html.replace('"', '&quot;')
         return HTML(iframe.format(width=width, height=height, srcdoc=srcdoc))
 
-    def add_shapes(self, name, shapes, style=None):
+    def add_shapes(self, name, shapes, style=None, text=None):
         """Add shapes to the map. Accepts pandas Series or list of
         shapely or ogr.Geometry objects, or a dictionary or string
         matching the geojson spec."""
@@ -111,7 +155,18 @@ class HTMLMap(object):
             style = {}
 
         self.overlays[name] = {"shape": get_geojson_dict(shapes),
-                               "style": style}
+                               "style": style,
+                               "kind": "geoJson",
+                               "text": text}
+
+    def add_markers(self, name, shapes, style=None, text=None):
+        if style is None:
+            style = {}
+
+        self.overlays[name] = {"shape": get_latlngs(shapes),
+                               "kind": "marker",
+                               "style": style,
+                               "text": text}
 
     def add_text(self, name, points, values, style=None):
         """Not implemented yet"""

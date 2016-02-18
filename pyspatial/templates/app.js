@@ -1,4 +1,6 @@
 //Map
+L.Icon.Default.imagePath = "{{ static_img }}";
+
 PL.colors.initializeColorBrewer();
 
 var DATA = JSON.parse($("#data").html());
@@ -51,8 +53,10 @@ app.controller('controller', ['$scope', '$timeout', '$http', '$q', 'tileService'
     var palette = getPalette(cp);
     $scope.map.choropleth(DATA.base_layer, cp, palette, DATA.info_cols);
   }
+  console.log(DATA.overlays);
   for (var o in DATA.overlays) {
-    $scope.map.addOverlay(o, DATA.overlays[o].shape, DATA.overlays[o].style,
-                          DATA.overlays[o].onEachFeature, false);
+    $scope.map.addOverlay(o, DATA.overlays[o].kind, DATA.overlays[o].shape,
+                          DATA.overlays[o].style,
+                          DATA.overlays[o].text, false);
   }
 }]);
