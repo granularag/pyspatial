@@ -662,7 +662,7 @@ class VectorLayer(pd.Series):
             s = [to_shapely(f) for f in self.features]
         else:
             if hasattr(ids, "__iter__"):
-                s = [to_shapely(self[self._id_type(id)]) for id in ids]
+                s = [to_shapely(self[i]) for i in ids]
             else:
                 return to_shapely(self[ids])
 
@@ -672,12 +672,8 @@ class VectorLayer(pd.Series):
         if ids is None:
             s = [to_geometry(f, proj=proj, copy=True) for f in self.features]
         else:
-            if type(ids) in [str, unicode] and self._id_type in [str, unicode]:
-                return to_geometry(self[self._id_type(ids)], proj=proj,
-                                   copy=True)
-            elif hasattr(ids, "__iter__"):
-                s = [to_geometry(self[self._id_type(id)], proj=proj, copy=True)
-                     for id in ids]
+            if hasattr(ids, "__iter__"):
+                s = [to_geometry(self[i], proj=proj, copy=True) for i in ids]
             else:
                 return to_geometry(self[ids], proj=proj, copy=True)
 
