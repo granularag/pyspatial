@@ -1,3 +1,10 @@
+"""
+Parts of this file were adapted from the geopandas project
+(https://github.com/geopandas/geopandas) which have been permitted for use
+under the BSD license.
+"""
+
+
 from urlparse import urlparse
 
 import requests
@@ -148,7 +155,7 @@ class VectorLayer(pd.Series):
     geometries: org.Feature[], ogr.Geometry[], shapely.BaseGeometry[]
 
     proj: osr.SpatialReference
-         The projection for the geometries
+         The projection for the geometries.  Defaults to EPSG:4326.
 
     index: iterable
         The index to use for the shapes
@@ -156,15 +163,10 @@ class VectorLayer(pd.Series):
     Attributes
     ----------
 
-    index: pandas.Index
-
-   _sindex: rtree.index.Index
+    _sindex: rtree.index.Index
         The spatial index. Initially None, but can be built with build_sindex()
 
-    features, proj, id: see parameters
 
-    fields: str[]
-        The names of the attributes
 
     """
     _metadata = ['name', 'proj']
@@ -204,8 +206,8 @@ class VectorLayer(pd.Series):
         val = getattr(super(VectorLayer, self), mtd)(*args, **kwargs)
         if type(val) == pd.Series:
             val.__class__ = VectorLayer
-            val.crs = self.crs
-            val._invalidate_sindex()
+            val.proj = self.proj
+            val._sindex = None
         return val
 
     def __getitem__(self, key):
@@ -222,6 +224,12 @@ class VectorLayer(pd.Series):
 
     def _make_ids(self, ids):
         return pd.Index(ids)
+
+    def append(self, *args, **kwargs):
+        other = args[0]
+        if self.proj.ExportToProj4() != other.proj.ExportToProj4():
+            args = (other.transform(self.proj),)
+        return self._wrapped_pandas_method('append', *args, **kwargs)
 
     # TODO: Fix this hack
     # Just to avoid a big refactor right now
@@ -640,9 +648,9 @@ class VectorLayer(pd.Series):
 
     def transform(self, target_proj):
         ct = CoordinateTransformation(self.proj, target_proj)
-        feats = [f.Clone() for f in self]
-        [f.Transform(ct) for f in feats]
-        return VectorLayer(feats, proj=target_proj, index=self.index)
+        geoms = [g.Clone() for g in self]
+        [g.Transform(ct) for g in geoms]
+        return VectorLayer(geoms, proj=target_proj, index=self.index)
 
     def to_wgs84(self):
         """Transform the VectorLayer into WGS84"""
@@ -800,9 +808,9 @@ class VectorLayer(pd.Series):
             else:
                 return pd.DataFrame(data, columns=["x", "y"], index=self.index)
         elif format == "VectorLayer":
-            pts = [f.Centroid() for f in self.features]
+            pts = [g.Centroid() for g in self]
             [p.AssignSpatialReference(self.proj) for p in pts]
-            return VectorLayer(pts, self.proj, self.index)
+            return VectorLayer(pts, index=self.index, proj=self.proj)
         else:
             raise ValueError("format must be in %s" % formats)
 
@@ -1058,7 +1066,8 @@ def read_layer(path, layer=0, index=None):
 
 
 def read_geojson(path_or_str, index=None):
-    """Create a vector layer from a geojson object
+    """Create a vector layer from a geojson object.  Assumes that
+    the data has a projection of EPSG:4326
 
     Parameters
     ----------
@@ -1103,7 +1112,7 @@ def read_geojson(path_or_str, index=None):
     props.index.name = name
     geoms.index.name = name
 
-    return VectorLayer(geoms, proj=proj), props
+    return VectorLayer(geoms, proj=proj, index=ids), props
 
 
 def from_series(geom_series, proj=None):

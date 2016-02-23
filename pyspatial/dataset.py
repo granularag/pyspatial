@@ -63,6 +63,9 @@ def to_dict(df, hidden=None, not_visible=None, labels=None, types=None):
     -------
     Python dictionary with the attributes 'data', 'schema', 'index'
     """
+    if df is None:
+        df = pd.DataFrame()
+
     s = []
     if len(set(df.columns)) != len(df.columns):
         raise ValueError("DataFrame columns not unique!")

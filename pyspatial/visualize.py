@@ -127,7 +127,8 @@ class HTMLMap(object):
                 "view": {"lat": self.lat, "lng": self.lng, "zoom": self.zoom},
                 "overlays": self.overlays,
                 "info_cols": self.info_cols,
-                "dataset": to_dict(self.data), "choropleths": self.choropleths}
+                "dataset": to_dict(dataset),
+                "choropleths": self.choropleths}
 
         data_json = dumps(data)
         opts = dict(DATA=data_json, height=height,

@@ -1,0 +1,19 @@
+include MANIFEST.in
+include README.md
+include INSTALL.md
+include LICENSE.txt
+include CHANGES.txt
+include requirements.txt
+include setup.py
+include scripts/make_index
+include scripts/make_catalog_file
+
+global-exclude *.so
+global-exclude *.pyd
+global-exclude *.pyc
+global-exclude *~
+global-exclude \#*
+global-exclude .git*
+global-exclude .DS_Store
+global-exclude *.png
+

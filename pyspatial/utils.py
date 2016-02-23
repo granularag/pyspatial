@@ -47,6 +47,13 @@ def get_projection(obj, layer_index=0):
     return srs
 
 
+"""
+The SVG related functions in this file were adapted from the shapely project
+(https://github.com/Toblerity/Shapely) which have been permitted for use
+under the BSD license.
+"""
+
+
 def _repr_svg_(shp):
     """SVG representation for iPython notebook"""
     svg_top = ('<svg xmlns="http://www.w3.org/2000/svg" '
