@@ -24,7 +24,7 @@ http://nbviewer.jupyter.org/github/granularag/pyspatial/tree/master/examples/
 
 # Known Issues
 
-* The geometry resulting from calling cent = feat.Centroid() on a VectorLayer feature does not inherit the spatial reference of the feature. It needs to be reassigned using cent.AssignSpatialReference(vl.proj)
+* In ogr, when you get the centroid of a geometry (e.g. cent = my_geometry.Centroid()), cent does not inherit the spatial reference. It needs to be reassigned using cent.AssignSpatialReference(my_geometry.GetSpatialReference())
 
 # Contributors
 
