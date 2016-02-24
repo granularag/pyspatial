@@ -22,6 +22,9 @@ http://nbviewer.jupyter.org/github/granularag/pyspatial/tree/master/examples/
 * Cython code: python setup.py build_ext --inplace
 * Tests: nosetests -v
 
+# Known Issues
+
+* The geometry resulting from calling cent = feat.Centroid() on a VectorLayer feature does not inherit the spatial reference of the feature. It needs to be reassigned using cent.AssignSpatialReference(vl.proj)
 
 # Contributors
 
