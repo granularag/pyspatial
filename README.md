@@ -25,7 +25,7 @@ http://nbviewer.jupyter.org/github/granularag/pyspatial/tree/master/examples/
 # Known Issues
 
 * In ogr, when you get the centroid of a geometry (e.g. cent = my_geometry.Centroid()), cent does not inherit the spatial reference. It needs to be reassigned using cent.AssignSpatialReference(my_geometry.GetSpatialReference())
-* VectorLayer object do not support a Float64Index
+* VectorLayer object does not support a Float64Index
 
 # Contributors
 
