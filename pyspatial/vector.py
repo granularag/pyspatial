@@ -186,6 +186,7 @@ class VectorLayer(pd.Series):
     def __init__(self, *args, **kwargs):
 
         proj = kwargs.pop("proj", None)
+
         if proj is None:
             proj = ut.projection_from_epsg()
 
@@ -659,14 +660,12 @@ class VectorLayer(pd.Series):
 
     def to_shapely(self, ids=None):
         if ids is None:
-            s = [to_shapely(f) for f in self.features]
+            return self.map(to_shapely)
         else:
             if hasattr(ids, "__iter__"):
-                s = [to_shapely(self[i]) for i in ids]
+                return self[ids].map(to_shapely)
             else:
                 return to_shapely(self[ids])
-
-        return pd.Series(s, index=self.index)
 
     def to_geometry(self, ids=None, proj=None):
         if ids is None:
@@ -677,7 +676,7 @@ class VectorLayer(pd.Series):
             else:
                 return to_geometry(self[ids], proj=proj, copy=True)
 
-        return pd.Series(s, index=self.index)
+        return pd.Series(s, index=ids)
 
     def map(self, f, as_geometry=False):
         """Apply a function, f, over all the features.
@@ -982,18 +981,44 @@ class VectorLayer(pd.Series):
             with smart_open.smart_open(path, 'wb') as outf:
                 outf.write(s)
 
-    def to_svg(self, ids=None):
-        """Return svg represention. ids can be one or an
-        iterable of the layers 'ids' attribute.  If ids is None,
-        returns a list of svg strings"""
+    def to_svg(self, ids=None, ipython=False):
+        """Return svg represention. Can output in IPython
+        friendly form. If ids is None, will return a pandas.Series
+        with all shapes as svg.
+
+        Parameters
+        ----------
+        ids: str or iterable (default=None)
+            The values of the geometries to convert to svg.
+            If string, returns a string, if iterable, returns a Series.
+
+        ipython: (default=False)
+           Render in IPython friendly format
+
+        Returns
+        -------
+        str or pandas.Series
+
+        """
+
+        if ipython:
+            from IPython.display import HTML
 
         if ids is None:
             ids = self.index
 
         if hasattr(ids, "__iter__"):
-            return map(ut.to_svg, self.to_shapely(ids))
+            s = self.to_shapely(ids).map(ut.to_svg)
+            if ipython:
+                s = HTML("<br>".join(s))
+            return s
         else:
-            return ut.to_svg(to_shapely(self[ids]))
+            s = ut.to_svg(to_shapely(self[ids]))
+
+        if ipython:
+            return HTML(s)
+
+        return s
 
 
 def fetch_geojson(path):

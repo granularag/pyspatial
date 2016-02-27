@@ -22,7 +22,8 @@ from PIL import Image, ImageDraw
 import smart_open
 
 from pyspatial import spatiallib as slib
-from pyspatial.vector import read_geojson, to_geometry
+from pyspatial.vector import read_geojson, to_geometry, bounding_box
+from pyspatial.vector import VectorLayer
 
 
 NP2GDAL_CONVERSION = {
@@ -248,9 +249,47 @@ class RasterBase(object):
         list of shapely.Polygon
             Shapes in pixel coordinates.
         """
-        if self.proj != vector_layer.proj:
+        if self.proj.ExportToProj4() != vector_layer.proj.ExportToProj4():
             vector_layer = vector_layer.transform(self.proj)
-        return [self.shape_to_pixel(f) for f in vector_layer.features]
+        return [self.shape_to_pixel(geom) for geom in vector_layer]
+
+    def to_raster_coord(self, pxx, pxy):
+        """Convert pixel corrdinates -> raster coordinates"""
+        if not (0 <= pxx < self.RasterXSize):
+            raise ValueError("Invalid x coordinate: %s" % pxx)
+
+        if not (0 <= pxy < self.RasterYSize):
+            raise ValueError("Invalid x coordinate: %s" % pxx)
+
+        # urx, ury are the upper right coordinates
+        # xsize, ysize, are the pixel sizes
+        urx, xsize, _, ury, _, ysize = self.geo_transform
+        return (urx + pxx * xsize, ury + ysize * pxy)
+
+    def to_geometry_grid(self, minx, miny, maxx, maxy):
+        """Convert pixels into a geometry grid. All values should be in
+        pixel cooridnates.
+
+        Returns
+        -------
+        VectorLayer with index a tuple of the upper left corner coordinate
+        of each pixel.
+        """
+
+        xs = np.arange(minx, maxx+1)
+        ys = np.arange(miny, maxy+1)
+
+        x, y = np.meshgrid(xs, ys)
+        index = []
+        boxes = []
+        for j in range(x.shape[0]):
+            for i in range(x.shape[1]):
+                x1, y1 = self.to_raster_coord(x[i, j], y[i, j])
+                x2, y2 = self.to_raster_coord(x[i, j] + 1, y[i, j] + 1)
+                boxes.append(bounding_box((x1, x2, y1, y2), self.proj))
+                index.append((int(x[i, j]), int(y[i, j])))
+
+        return VectorLayer(boxes, index=index, proj=self.proj)
 
     def GetGeoTransform(self):
         """Returns affine transform from GDAL for describing the relationship
