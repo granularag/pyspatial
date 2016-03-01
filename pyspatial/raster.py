@@ -22,7 +22,8 @@ from PIL import Image, ImageDraw
 import smart_open
 
 from pyspatial import spatiallib as slib
-from pyspatial.vector import read_geojson, to_geometry
+from pyspatial.vector import read_geojson, to_geometry, bounding_box
+from pyspatial.vector import VectorLayer
 
 
 NP2GDAL_CONVERSION = {
@@ -190,6 +191,7 @@ class RasterBase(object):
         self.min_lat = self.geo_transform[3] + self.geo_transform[5]*self.ysize
         self.lon_px_size = abs(self.geo_transform[1])
         self.lat_px_size = self.geo_transform[5]
+        self.pixel_area = abs(self.lon_px_size * self.lat_px_size)
         self.proj = proj
 
     def _to_pixels(self, lon, lat, alt=None):
@@ -248,9 +250,47 @@ class RasterBase(object):
         list of shapely.Polygon
             Shapes in pixel coordinates.
         """
-        if self.proj != vector_layer.proj:
+        if self.proj.ExportToProj4() != vector_layer.proj.ExportToProj4():
             vector_layer = vector_layer.transform(self.proj)
-        return [self.shape_to_pixel(f) for f in vector_layer.features]
+        return [self.shape_to_pixel(geom) for geom in vector_layer]
+
+    def to_raster_coord(self, pxx, pxy):
+        """Convert pixel corrdinates -> raster coordinates"""
+        if not (0 <= pxx < self.RasterXSize):
+            raise ValueError("Invalid x coordinate: %s" % pxx)
+
+        if not (0 <= pxy < self.RasterYSize):
+            raise ValueError("Invalid x coordinate: %s" % pxx)
+
+        # urx, ury are the upper right coordinates
+        # xsize, ysize, are the pixel sizes
+        urx, xsize, _, ury, _, ysize = self.geo_transform
+        return (urx + pxx * xsize, ury + ysize * pxy)
+
+    def to_geometry_grid(self,  minx, miny, maxx, maxy):
+        """Convert pixels into a geometry grid. All values should be in
+        pixel cooridnates.
+
+        Returns
+        -------
+        VectorLayer with index a tuple of the upper left corner coordinate
+        of each pixel.
+        """
+
+        xs = np.arange(minx, maxx+1)
+        ys = np.arange(miny, maxy+1)
+
+        x, y = np.meshgrid(xs, ys)
+        index = []
+        boxes = []
+        for i in range(x.shape[0]):
+            for j in range(x.shape[1]):
+                x1, y1 = self.to_raster_coord(x[i, j], y[i, j])
+                x2, y2 = self.to_raster_coord(x[i, j] + 1, y[i, j] + 1)
+                boxes.append(bounding_box((x1, x2, y1, y2), self.proj))
+                index.append((int(x[i, j]), int(y[i, j])))
+
+        return VectorLayer(boxes, index=index, proj=self.proj)
 
     def GetGeoTransform(self):
         """Returns affine transform from GDAL for describing the relationship
@@ -648,9 +688,30 @@ class RasterDataset(RasterBase):
         y_grid = int(r.group(2))
         return x_grid, y_grid
 
+    def _small_pixel_query(self, shp, shp_px):
+
+        grid = self.to_geometry_grid(*shp_px.bounds)
+        areas = {}
+        for i, b in grid.iteritems():
+
+            if b.Intersects(to_geometry(shp, proj=self.proj)):
+                diff = b.Intersection(to_geometry(shp, proj=self.proj))
+                areas[i] = diff.GetArea()
+
+        index = areas.keys()
+        total_area = sum(areas.values())
+
+        if total_area > 0:
+            weights = np.array([areas[k]/self.pixel_area for k in index])
+        else:
+            weights = np.zeros(len(index))
+
+        values = self.get_values_for_pixels(np.array(index))
+        return values, weights
+
     def query(self, vector_layer, ext_outline=False, ext_fill=True,
               int_outline=False, int_fill=False, scale_factor=4,
-              missing_first=False):
+              missing_first=False, small_polygon_pixels=4):
         """
         Query the dataset with a set of shapes (in a VectorLayer). The
         vectors will be reprojected into the projection of the raster. Any
@@ -677,11 +738,18 @@ class RasterDataset(RasterBase):
             Where the missing values should be at the beginning or the
             end of the results.
 
+        small_polygon_pixels: integer (default 4)
+            Number of pixels for the intersection of the polygon with the
+            raster to be considered "small".  This is a slow step that computes
+            the exact intersection between the polygon and the raster in the
+            cooridate space of the raster (not pixel space!).
+
         Yields
         ------
 
-        RasterQueryResult
-
+        RasterQueryResult.  This is 3 attributes: id, values, weights.  The
+        values are the pixel values from the raster.  the weights are the fraction
+        of the pixel that is occupied by the polgon.
         """
 
         if self.proj.ExportToProj4() != vector_layer.proj.ExportToProj4():
@@ -695,24 +763,25 @@ class RasterDataset(RasterBase):
         ids_to_tiles = None
         tiles_to_ids = None
 
+        # Removing this for now.  It needs more thought!
         # Optimization to minimize memory usage if the RasterDataset contains
         # an index.  This will sort by the upper left corners of all the shapes
         # and process one shape at a time.  It will remove the corresponding
         # entries in self.raster_arrays once all references for shapes in a
         # particular tile have been removed.
-        if self.index is not None:
-            res = {self._key_from_tile_filename(id): set(vl.intersects(f).ids)
-                   for id, f in self.index.iteritems()}
+        #if self.index is not None:
+        #    res = {self._key_from_tile_filename(id): set(vl.intersects(f).ids)
+        #           for id, f in self.index.iteritems()}
 
-            tiles_to_ids = {k: v for k, v in res.iteritems() if len(v) > 0}
-            ids_to_tiles = defaultdict(set)
-            for tile, shp_ids in tiles_to_ids.iteritems():
-                for id in shp_ids:
-                    ids_to_tiles[id].add(tile)
+        #    tiles_to_ids = {k: v for k, v in res.iteritems() if len(v) > 0}
+        #    ids_to_tiles = defaultdict(set)
+        #    for tile, shp_ids in tiles_to_ids.iteritems():
+        #        for id in shp_ids:
+        #            ids_to_tiles[id].add(tile)
 
-            vl = vl.sort()
+        #    vl = vl.sort()
 
-        missing = vector_layer.ids.difference(vl.ids)
+        missing = vector_layer.index.difference(vl.index)
 
         if missing_first:
             ids = missing.append(vl.ids)
@@ -729,33 +798,37 @@ class RasterDataset(RasterBase):
 
             else:
                 #Eagerly load tiles
-                if ids_to_tiles is not None:
-                    for key in list(ids_to_tiles[id]):
-                        if key not in self.raster_arrays:
-                            filename = self.path + "%d_%d.tif" % key
-                            self.raster_arrays[key] = RasterBand(filename)
-                        tiles_to_ids[key].remove(id)
+                #if ids_to_tiles is not None:
+                #    for key in list(ids_to_tiles[id]):
+                #        if key not in self.raster_arrays:
+                #            filename = self.path + "%d_%d.tif" % key
+                #            self.raster_arrays[key] = RasterBand(filename)
+                #        tiles_to_ids[key].remove(id)
 
-                # Rasterize the shape, and find list of all points.
-                mask = rasterize(shp, ext_outline=ext_outline,
-                                 ext_fill=ext_fill, int_outline=int_outline,
-                                 int_fill=int_fill,
-                                 scale_factor=scale_factor).T
-
-                minx, miny, maxx, maxy = shp.bounds
-                idx = np.argwhere(mask > 0)
-
-                if idx.shape[0] == 0:
-                    weights = mask[[0]]
+                # Check for small polygon since rasterizing a polygon
+                # doesn't work for small polygons
+                if vl[id].GetArea() < small_polygon_pixels * self.pixel_area:
+                    values, weights = self._small_pixel_query(vl[id], shp)
 
                 else:
-                    weights = mask[idx[:, 0], idx[:, 1]]
+                    # Rasterize the shape, and find list of all points.
+                    mask = rasterize(shp, ext_outline=ext_outline,
+                                     ext_fill=ext_fill,
+                                     int_outline=int_outline,
+                                     int_fill=int_fill,
+                                     scale_factor=scale_factor).T
 
-                pts = (idx + np.array([minx, miny])).astype(int)
+                    minx, miny, maxx, maxy = shp.bounds
+                    idx = np.argwhere(mask > 0)
 
-                values = self.get_values_for_pixels(pts)
+                    if idx.shape[0] == 0:
+                        weights = mask[[0]]
+                    else:
+                        weights = mask[idx[:, 0], idx[:, 1]]
 
-                # Look up values for each pixel.
+                    pts = (idx + np.array([minx, miny])).astype(int)
+                    values = self.get_values_for_pixels(pts)
+
                 yield RasterQueryResult(id, values, weights)
 
             if tiles_to_ids is None:
