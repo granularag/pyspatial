@@ -840,7 +840,7 @@ class VectorLayer(pd.Series):
         return (xmin, xmax, ymin, ymax)
 
     def bbox(self):
-        """Return a shapely poly representing the bounding box of the layer"""
+        """Return a geometry representing the bounding box of the layer"""
         (xmin, xmax, ymin, ymax) = self.get_extent()
         return to_geometry(box(xmin, ymin, xmax, ymax), proj=self.proj)
 

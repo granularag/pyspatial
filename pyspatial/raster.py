@@ -191,6 +191,7 @@ class RasterBase(object):
         self.min_lat = self.geo_transform[3] + self.geo_transform[5]*self.ysize
         self.lon_px_size = abs(self.geo_transform[1])
         self.lat_px_size = self.geo_transform[5]
+        self.pixel_area = abs(self.lon_px_size * self.lat_px_size)
         self.proj = proj
 
     def _to_pixels(self, lon, lat, alt=None):
@@ -266,7 +267,7 @@ class RasterBase(object):
         urx, xsize, _, ury, _, ysize = self.geo_transform
         return (urx + pxx * xsize, ury + ysize * pxy)
 
-    def to_geometry_grid(self, minx, miny, maxx, maxy):
+    def to_geometry_grid(self,  minx, miny, maxx, maxy):
         """Convert pixels into a geometry grid. All values should be in
         pixel cooridnates.
 
@@ -282,8 +283,8 @@ class RasterBase(object):
         x, y = np.meshgrid(xs, ys)
         index = []
         boxes = []
-        for j in range(x.shape[0]):
-            for i in range(x.shape[1]):
+        for i in range(x.shape[0]):
+            for j in range(x.shape[1]):
                 x1, y1 = self.to_raster_coord(x[i, j], y[i, j])
                 x2, y2 = self.to_raster_coord(x[i, j] + 1, y[i, j] + 1)
                 boxes.append(bounding_box((x1, x2, y1, y2), self.proj))
@@ -687,9 +688,28 @@ class RasterDataset(RasterBase):
         y_grid = int(r.group(2))
         return x_grid, y_grid
 
+    def _small_pixel_query(self, shp, shp_px):
+
+        grid = self.to_geometry_grid(*shp_px.bounds)
+        areas = {}
+        for i, b in grid.iteritems():
+            diff = b.Intersection(to_geometry(shp, proj=self.proj))
+            areas[i] = diff.GetArea()
+
+        index = areas.keys()
+        total_area = sum(areas.values())
+
+        if total_area > 0:
+            weights = np.array([areas[k]/self.pixel_area for k in index])
+        else:
+            weights = np.zeros(len(index))
+
+        values = self.get_values_for_pixels(np.array(index))
+        return values, weights
+
     def query(self, vector_layer, ext_outline=False, ext_fill=True,
               int_outline=False, int_fill=False, scale_factor=4,
-              missing_first=False):
+              missing_first=False, small_polygon_pixels=4):
         """
         Query the dataset with a set of shapes (in a VectorLayer). The
         vectors will be reprojected into the projection of the raster. Any
@@ -716,11 +736,18 @@ class RasterDataset(RasterBase):
             Where the missing values should be at the beginning or the
             end of the results.
 
+        small_polygon_pixels: integer (default 4)
+            Number of pixels for the intersection of the polygon with the
+            raster to be considered "small".  This is a slow step that computes
+            the exact intersection between the polygon and the raster in the
+            cooridate space of the raster (not pixel space!).
+
         Yields
         ------
 
-        RasterQueryResult
-
+        RasterQueryResult.  This is 3 attributes: id, values, weights.  The
+        values are the pixel values from the raster.  the weights are the fraction
+        of the pixel that is occupied by the polgon.
         """
 
         if self.proj.ExportToProj4() != vector_layer.proj.ExportToProj4():
@@ -775,26 +802,31 @@ class RasterDataset(RasterBase):
                             self.raster_arrays[key] = RasterBand(filename)
                         tiles_to_ids[key].remove(id)
 
-                # Rasterize the shape, and find list of all points.
-                mask = rasterize(shp, ext_outline=ext_outline,
-                                 ext_fill=ext_fill, int_outline=int_outline,
-                                 int_fill=int_fill,
-                                 scale_factor=scale_factor).T
-
-                minx, miny, maxx, maxy = shp.bounds
-                idx = np.argwhere(mask > 0)
-
-                if idx.shape[0] == 0:
-                    weights = mask[[0]]
+                # Check for small polygon since rasterizing a polygon
+                # doesn't work for small polygons
+                if vl[id].GetArea() < small_polygon_pixels * self.pixel_area:
+                    values, weights = self._small_pixel_query(vl[id], shp)
 
                 else:
-                    weights = mask[idx[:, 0], idx[:, 1]]
+                    # Rasterize the shape, and find list of all points.
+                    mask = rasterize(shp, ext_outline=ext_outline,
+                                     ext_fill=ext_fill,
+                                     int_outline=int_outline,
+                                     int_fill=int_fill,
+                                     scale_factor=scale_factor).T
 
-                pts = (idx + np.array([minx, miny])).astype(int)
+                    minx, miny, maxx, maxy = shp.bounds
+                    idx = np.argwhere(mask > 0)
 
-                values = self.get_values_for_pixels(pts)
+                    if idx.shape[0] == 0:
+                        weights = mask[[0]]
+                    else:
+                        weights = mask[idx[:, 0], idx[:, 1]]
 
-                # Look up values for each pixel.
+                        pts = (idx + np.array([minx, miny])).astype(int)
+
+                        values = self.get_values_for_pixels(pts)
+
                 yield RasterQueryResult(id, values, weights)
 
             if tiles_to_ids is None:

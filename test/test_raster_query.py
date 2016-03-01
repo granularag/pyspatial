@@ -18,6 +18,14 @@ def get_path(x):
     return os.path.join(base, "data", x)
 
 
+def compute_stats(row, weights):
+    values = np.array(row, dtype=np.uint8)
+    counts = np.bincount(values, weights=weights, minlength=256)
+    zeros = np.zeros(counts.shape)
+    total = 1. * np.sum(counts)
+    return counts/total if total > 0 else zeros
+
+
 class TestRasterQuery:
     @classmethod
     def setup_class(cls):
@@ -45,16 +53,9 @@ class TestRasterQuery:
     def teardown_class(cls):
         os.chdir(cwd)
 
-    def compute_stats(self, row, weights):
-        values = np.array(row, dtype=np.uint8)
-        counts = np.bincount(values, weights=weights, minlength=256)
-        zeros = np.zeros(counts.shape)
-        total = 1. * np.sum(counts)
-        return counts/total if total > 0 else zeros
-
     def make_dataframe(self, generator):
         rows = [r for r in generator]
-        res = np.array([self.compute_stats(r.values, r.weights) for r in rows])
+        res = np.array([compute_stats(r.values, r.weights) for r in rows])
         index = [r.id for r in rows]
         return pd.DataFrame(res, index=index)
 
@@ -166,13 +167,13 @@ class TestRasterQuery:
 
         rd = read_catalog(get_path("../catalog/co_soil.json"))
         for r in rd.query(vl):
-            self.compute_stats(r.values, r.weights)
+            compute_stats(r.values, r.weights)
 
         rd = read_catalog(get_path("../catalog/co_soil_bad.json"))
         failed = False
         try:
             for r in rd.query(vl):
-                self.compute_stats(r.values, r.values)
+                compute_stats(r.values, r.values)
         except IndexError:
             failed = True
 
