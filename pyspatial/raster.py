@@ -693,8 +693,10 @@ class RasterDataset(RasterBase):
         grid = self.to_geometry_grid(*shp_px.bounds)
         areas = {}
         for i, b in grid.iteritems():
-            diff = b.Intersection(to_geometry(shp, proj=self.proj))
-            areas[i] = diff.GetArea()
+
+            if b.Intersects(to_geometry(shp, proj=self.proj)):
+                diff = b.Intersection(to_geometry(shp, proj=self.proj))
+                areas[i] = diff.GetArea()
 
         index = areas.keys()
         total_area = sum(areas.values())
@@ -761,24 +763,25 @@ class RasterDataset(RasterBase):
         ids_to_tiles = None
         tiles_to_ids = None
 
+        # Removing this for now.  It needs more thought!
         # Optimization to minimize memory usage if the RasterDataset contains
         # an index.  This will sort by the upper left corners of all the shapes
         # and process one shape at a time.  It will remove the corresponding
         # entries in self.raster_arrays once all references for shapes in a
         # particular tile have been removed.
-        if self.index is not None:
-            res = {self._key_from_tile_filename(id): set(vl.intersects(f).ids)
-                   for id, f in self.index.iteritems()}
+        #if self.index is not None:
+        #    res = {self._key_from_tile_filename(id): set(vl.intersects(f).ids)
+        #           for id, f in self.index.iteritems()}
 
-            tiles_to_ids = {k: v for k, v in res.iteritems() if len(v) > 0}
-            ids_to_tiles = defaultdict(set)
-            for tile, shp_ids in tiles_to_ids.iteritems():
-                for id in shp_ids:
-                    ids_to_tiles[id].add(tile)
+        #    tiles_to_ids = {k: v for k, v in res.iteritems() if len(v) > 0}
+        #    ids_to_tiles = defaultdict(set)
+        #    for tile, shp_ids in tiles_to_ids.iteritems():
+        #        for id in shp_ids:
+        #            ids_to_tiles[id].add(tile)
 
-            vl = vl.sort()
+        #    vl = vl.sort()
 
-        missing = vector_layer.ids.difference(vl.ids)
+        missing = vector_layer.index.difference(vl.index)
 
         if missing_first:
             ids = missing.append(vl.ids)
@@ -795,12 +798,12 @@ class RasterDataset(RasterBase):
 
             else:
                 #Eagerly load tiles
-                if ids_to_tiles is not None:
-                    for key in list(ids_to_tiles[id]):
-                        if key not in self.raster_arrays:
-                            filename = self.path + "%d_%d.tif" % key
-                            self.raster_arrays[key] = RasterBand(filename)
-                        tiles_to_ids[key].remove(id)
+                #if ids_to_tiles is not None:
+                #    for key in list(ids_to_tiles[id]):
+                #        if key not in self.raster_arrays:
+                #            filename = self.path + "%d_%d.tif" % key
+                #            self.raster_arrays[key] = RasterBand(filename)
+                #        tiles_to_ids[key].remove(id)
 
                 # Check for small polygon since rasterizing a polygon
                 # doesn't work for small polygons
@@ -823,9 +826,8 @@ class RasterDataset(RasterBase):
                     else:
                         weights = mask[idx[:, 0], idx[:, 1]]
 
-                        pts = (idx + np.array([minx, miny])).astype(int)
-
-                        values = self.get_values_for_pixels(pts)
+                    pts = (idx + np.array([minx, miny])).astype(int)
+                    values = self.get_values_for_pixels(pts)
 
                 yield RasterQueryResult(id, values, weights)
 

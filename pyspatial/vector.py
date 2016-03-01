@@ -670,6 +670,7 @@ class VectorLayer(pd.Series):
     def to_geometry(self, ids=None, proj=None):
         if ids is None:
             s = [to_geometry(f, proj=proj, copy=True) for f in self.features]
+            ids = self.index
         else:
             if hasattr(ids, "__iter__"):
                 s = [to_geometry(self[i], proj=proj, copy=True) for i in ids]
@@ -812,14 +813,14 @@ class VectorLayer(pd.Series):
     def envelopes(self):
         """The the envelope of each shape as xmin, xmax, ymin, ymax.
         Returns a pandas.Series."""
-        data = (f.GetEnvelope() for f in self.features)
+        data = (f.GetEnvelope() for f in self)
         return pd.Series(data, index=self.index)
 
     def boundingboxes(self):
         """Return a VectorLayer with the bounding boxes of each
         geometry"""
         geoms = self.envelopes().map(lambda x: bounding_box(x, self.proj))
-        return VectorLayer(geoms, proj=self.proj, index=self.index)
+        return VectorLayer(geoms, proj=self.proj, index=geoms.index)
 
     def upper_left_corners(self):
         """Get a DataFrame with "x" and "y" columns for the
@@ -910,7 +911,7 @@ class VectorLayer(pd.Series):
 
         # Get dataframe with min_lon, max_lat for all shapes.
         df = getattr(self, kind)()
-        df.sort(columns=columns, ascending=ascending, inplace=True)
+        df.sort_values(by=columns, ascending=ascending, inplace=True)
 
         if index_only:
             return df.index
