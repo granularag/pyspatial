@@ -25,7 +25,7 @@ from pyspatial.spatiallib import to_utm
 from pyspatial.io import get_ogr_datasource
 
 
-def to_shapely(feat):
+def to_shapely(feat, proj=None):
     if isinstance(feat, BaseGeometry):
         return feat
     elif isinstance(feat, ogr.Feature):
@@ -36,7 +36,12 @@ def to_shapely(feat):
         elif isinstance(feat[0], ogr.Geometry):
             return [wkb.loads(f.ExportToWkb()) for f in feat]
     elif isinstance(feat, ogr.Geometry):
-        return wkb.loads(feat.ExportToWkb())
+        other = feat
+        if proj is not None:
+            other = feat.Clone()
+            proj = feat.GetSpatialReference()
+            other.TransformTo(proj)
+        return wkb.loads(other.ExportToWkb())
     else:
         raise ValueError("Unable to convert to shapely object")
 
@@ -146,6 +151,22 @@ def _convert_array_args(args):
         args = ([args[0]],)
 
     return args
+
+
+def set_theoretic_methods(function, shp1, shp2):
+    fns = ["Intersection", "Difference", "SymDifference", "Union"]
+    assert function in fns, "function must be one of %s" % fns
+    fn = getattr(shp1, function)
+    proj1 = shp1.GetSpatialReference()
+    proj2 = shp2.GetSpatialReference()
+
+    other = shp2.Clone()
+
+    # Reproject shp2 onto shp1
+    if proj1.ExportToProj4() != proj2.ExportToProj4():
+        other.TransformTo(proj1)
+
+    return fn(other)
 
 
 class VectorLayer(pd.Series):
@@ -268,12 +289,12 @@ class VectorLayer(pd.Series):
         if self._sindex is None:
             self.build_sindex()
 
-        shp = to_shapely(shp)
-
+        xmin, xmax, ymin, ymax = shp.GetEnvelope()
+        bounds = (xmin, ymin, xmax, ymax)
         if isinstance(shp, list):
             raise ValueError("Collections of shapes are not supported!")
 
-        return shp, self._sindex.intersection(shp.bounds, objects="raw")
+        return shp, self._sindex.intersection(bounds, objects="raw")
 
     def intersects(self, shp, index_only=False):
         """Return a vector layer with only those shapes in the
@@ -292,8 +313,9 @@ class VectorLayer(pd.Series):
         http://toblerity.org/shapely/manual.html#object.intersects
 
         """
+        shp = to_geometry(shp, proj=self.proj)
         _shp, ids = self._get_index_intersection(shp)
-        ids = [i for i in ids if self[i].Intersect(to_geometry(shp))]
+        ids = [i for i in ids if self[i].Intersect(shp)]
 
         ids = self._make_ids(ids)
 
@@ -497,10 +519,6 @@ class VectorLayer(pd.Series):
         index_only: boolean (default False)
             Return the ids only (not a new vector layer)
 
-        inplace: boolean (default False)
-            Perform this operation in place (do not return a
-            new vector layer.
-
         See Also
         --------
         http://toblerity.org/shapely/manual.html#binary-predicates
@@ -543,10 +561,6 @@ class VectorLayer(pd.Series):
         index_only: boolean (default False)
             Return the ids only (not a new vector layer)
 
-        inplace: boolean (default False)
-            Perform this operation in place (do not return a
-            new vector layer.
-
         See Also
         --------
         http://toblerity.org/shapely/manual.html#object.disjoint
@@ -575,6 +589,21 @@ class VectorLayer(pd.Series):
         pandas.Index"""
         return self.disjoint(shp, index_only=True)
 
+    def _set_theoretic_methods(self, method, shp, reverse=False):
+        vl = self.intersects(shp)
+
+        shp = to_geometry(shp)
+
+        if isinstance(shp, list):
+            raise ValueError("Collections of shapes are not supported!")
+
+        geoms = []
+        for geom in vl:
+            a, b = (shp, geom) if reverse else (geom, shp)
+            geoms.append(set_theoretic_methods(method, a, b))
+
+        return VectorLayer(geoms, proj=self.proj, index=vl.index)
+
     def intersection(self, shp):
         """
         Cut the shapes in the VectorLayer to match the intersection
@@ -586,23 +615,67 @@ class VectorLayer(pd.Series):
 
         Returns
         -------
-        VectorLayer interesected by the shape
+        VectorLayer interesected by shp
         """
+        return self._set_theoretic_methods("Intersection", shp)
 
-        vl = self.intersects(shp)
-        shp = to_shapely(shp)
+    def difference(self, shp, kind="left"):
+        """
+        Cut the shapes in the VectorLayer to match the difference
+        specified by shp.
 
-        if isinstance(shp, list):
-            raise ValueError("Collections of shapes are not supported!")
+        Parameters
+        ----------
+        shp: shapely geometry or ogr Feature/Geometry
 
-        geoms = []
-        for geom in vl:
-            geom_wkb = wkb.dumps(shp.intersection(to_shapely(geom)))
-            _geom = ogr.CreateGeometryFromWkb(geom_wkb)
-            _geom.AssignSpatialReference(self.proj)
-            geoms.append(_geom)
+        kind: str
+           Either "left", "right", or "symmetric".
+           In the case of "left" take geom.Difference(shp).
+           In the case of "right", take shp.Difference(geom).
+           Where geom is each geometry in the VectorLayer
 
-        return VectorLayer(geoms, proj=self.proj, index=vl.index)
+        Returns
+        -------
+        VectorLayer
+        """
+        if kind == "left":
+            return self._set_theoretic_methods("Difference", shp)
+        elif kind == "right":
+            return self._set_theoretic_methods("Difference", shp, reverse=True)
+        elif kind == "symmetric":
+            return self._set_theoretic_methods("SymDifference", shp)
+        else:
+            raise ValueError("kind must be one of {left, right, symmetric}")
+
+    def symmetric_difference(self, shp, kind="left"):
+        """
+        Cut the shapes in the VectorLayer to match the symmetric difference
+        specified by shp.
+
+        Parameters
+        ----------
+        shp: shapely geometry or ogr Feature/Geometry
+
+        Returns
+        -------
+        VectorLayer
+        """
+        return self.difference(shp, kind="symmetric")
+
+    def union(self, shp):
+        """
+        Cut the shapes in the VectorLayer to match the union
+        specified by shp.
+
+        Parameters
+        ----------
+        shp: shapely geometry or ogr Feature/Geometry
+
+        Returns
+        -------
+        VectorLayer interesected by shp
+        """
+        return self._set_theoretic_methods("Union", shp)
 
     def unary_union(self):
         return ops.unary_union(self.to_shapely())
@@ -680,8 +753,7 @@ class VectorLayer(pd.Series):
         return pd.Series(s, index=ids)
 
     def map(self, f, as_geometry=False):
-        """Apply a function, f, over all the features.
-
+        """Apply a function, f, over all the geometries.
 
         Returns
         -------

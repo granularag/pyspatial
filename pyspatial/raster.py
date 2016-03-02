@@ -417,7 +417,7 @@ class RasterBand(RasterBase, np.ndarray):
                             geo_transform, proj)
 
         self.nan = band.GetNoDataValue()
-
+        #self = np.ma.masked_equal(self, band.GetNoDataValue(), copy=False)
         ctable = band.GetColorTable()
         if ctable is not None:
             self.colors = np.array([ctable.GetColorEntry(i)

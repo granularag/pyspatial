@@ -1,12 +1,74 @@
 import os
 import pickle
 import pyspatial.vector as vt
+from pyspatial.utils import projection_from_string, ALBERS_N_AMERICA
 from pyspatial.spatiallib import haversine
 from osgeo import ogr
-from nose.tools import assert_raises
+from nose.tools import assert_raises, assert_almost_equal
 
 base = os.path.abspath(os.path.dirname(__file__))
 get_path = lambda x: os.path.join(base, "data/vector", x)
+
+rect_str = """
+{
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -122.58956909179688,
+              37.73379707124429
+            ],
+            [
+              -122.58956909179688,
+              37.80218877920469
+            ],
+            [
+              -122.4587631225586,
+              37.80218877920469
+            ],
+            [
+              -122.4587631225586,
+              37.73379707124429
+            ],
+            [
+              -122.58956909179688,
+              37.73379707124429
+            ]
+          ]
+        ]
+      }"""
+rect = ogr.CreateGeometryFromJson(rect_str)
+
+farallon_str = """
+{
+    "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -123.04550170898436,
+              37.6816466602918
+            ],
+            [
+              -123.04550170898436,
+              37.72293542866175
+            ],
+            [
+              -122.97409057617188,
+              37.72293542866175
+            ],
+            [
+              -122.97409057617188,
+              37.6816466602918
+            ],
+            [
+              -123.04550170898436,
+              37.6816466602918
+            ]
+          ]
+        ]
+}"""
+
+farallon = ogr.CreateGeometryFromJson(farallon_str)
 
 
 def test_read():
@@ -40,6 +102,8 @@ class TestVectorLayer:
         cls.vl1, cls.df1 = vt.read_geojson(path1)
         cls.vl2, cls.df2 = vt.read_geojson(path2)
         cls.counties, cls.df3 = vt.read_geojson(path3, index="NAME")
+        cls.sf = "San Francisco"
+        cls.counties[cls.sf] = cls.counties[cls.sf].Difference(farallon)
         cls.zips, cls.df4 = vt.read_geojson(path4, index="ZCTA5CE10")
         p = get_path("clu/four_shapes_2il_2ca.p")
         cls.df = pickle.load(open(p))
@@ -108,3 +172,32 @@ class TestVectorLayer:
         act, _ = vt.read_layer(get_path("cb_2014_us_state_20m.zip"),
                                index="STUSPS")
         assert exp == act[["RI"]].to_json()
+
+    def test_set_theoretic(self):
+        proj = projection_from_string(ALBERS_N_AMERICA)
+        counties = self.counties.transform(proj)
+        sf = [self.sf]
+
+        union_exp = 183.026345584
+        union_act = counties[sf].union(rect)[self.sf]
+        assert_almost_equal(union_act.GetArea()/1e6, union_exp)
+
+        intersection_exp = 31.0072128793
+        intersection_act = counties[sf].intersection(rect)[self.sf]
+
+        assert_almost_equal(intersection_act.GetArea()/1e6, intersection_exp)
+
+        symdifference_exp = 152.019132704
+        symdifference_act = counties[sf].difference(rect, kind="symmetric")
+        assert_almost_equal(symdifference_act[self.sf].GetArea()/1e6,
+                            symdifference_exp)
+
+        ldifference_exp = 95.5399654593
+        ldifference_act = counties[sf].difference(rect, kind="left")
+        assert_almost_equal(ldifference_act[self.sf].GetArea()/1e6,
+                            ldifference_exp)
+
+        rdifference_exp = 56.4791672452
+        rdifference_act = counties[sf].difference(rect, kind="right")
+        assert_almost_equal(rdifference_act[self.sf].GetArea()/1e6,
+                            rdifference_exp)

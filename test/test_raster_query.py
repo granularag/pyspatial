@@ -169,7 +169,7 @@ class TestRasterQuery:
         assert(df_distance[1] < 0.05)
         assert(df_distance[5] < 0.05)
 
-    @timed(2)
+    @timed(5)
     def test_co_ne_border(self):
         p = get_path("vector/clu/clu_public_a_co095.shp")
         vl, _ = read_layer(p)
@@ -180,12 +180,14 @@ class TestRasterQuery:
         rd = read_catalog(get_path("../catalog/co_soil.json"))
         for r in rd.query(vl):
             r
+            #compute_stats(r.values, r.weights)
 
         rd = read_catalog(get_path("../catalog/co_soil_bad.json"))
         failed = False
         try:
             for r in rd.query(vl):
                 r
+                #compute_stats(r.values, r.weights)
         except IndexError:
             failed = True
 
