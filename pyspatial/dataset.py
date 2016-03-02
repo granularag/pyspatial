@@ -17,7 +17,7 @@ TYPE_MAP = {float: "number",
 def get_sample_pt(s):
     pt = s.dropna()
     if pt.shape[0] > 0:
-        return pt.iget(0)
+        return pt.iloc[0]
     else:
         return None
 

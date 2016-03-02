@@ -22,7 +22,7 @@ from shapely.geometry import box
 from shapely import ops
 import pyspatial.utils as ut
 from pyspatial.spatiallib import to_utm
-from pyspatial.io import get_ogr_datasource
+from pyspatial.io import get_ogr_datasource, write_shapefile
 
 
 def to_shapely(feat, proj=None):
@@ -1092,6 +1092,22 @@ class VectorLayer(pd.Series):
             return HTML(s)
 
         return s
+
+    def to_shapefile(self, path, df=None):
+        """Write the VectorLayer to an ESRI Shapefile.
+
+        Only supports simple types for the attributes (int, float, str).  Any
+        columns in the df that are not simple types will be ignored.
+
+        Parameters
+        ----------
+        path: str
+             Path to where you want to save the file. Can be local or s3.
+
+        df: pandas.DataFrame (default=None)
+            Attach the attributes to the vector layer.  Similar to to_dict.
+        """
+        return write_shapefile(self, path, df=df)
 
 
 def fetch_geojson(path):
