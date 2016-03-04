@@ -4,7 +4,6 @@ from smart_open import ParseUri
 from boto import connect_s3
 import re
 from uuid import uuid4
-from collections import defaultdict
 
 #Scipy
 import numpy as np
@@ -17,6 +16,7 @@ from osgeo.osr import SpatialReference
 from shapely import wkb, ops
 from shapely.affinity import scale
 from shapely.geometry import box
+from skimage.io import imsave
 
 from PIL import Image, ImageDraw
 import smart_open
@@ -24,6 +24,7 @@ import smart_open
 from pyspatial import spatiallib as slib
 from pyspatial.vector import read_geojson, to_geometry, bounding_box
 from pyspatial.vector import VectorLayer
+from pyspatial.utils import projection_from_epsg
 
 
 NP2GDAL_CONVERSION = {
@@ -406,8 +407,8 @@ class RasterBand(RasterBase, np.ndarray):
 
         gdal_type = band.DataType
         dtype = np.dtype(GDAL2NP_CONVERSION[gdal_type])
-
         self = np.asarray(ds.ReadAsArray().astype(dtype)).view(cls)
+        self.gdal_type = gdal_type
         proj = SpatialReference()
         proj.ImportFromWkt(ds.GetProjection())
         geo_transform = ds.GetGeoTransform()
@@ -417,6 +418,7 @@ class RasterBand(RasterBase, np.ndarray):
                             geo_transform, proj)
 
         self.nan = band.GetNoDataValue()
+
         #self = np.ma.masked_equal(self, band.GetNoDataValue(), copy=False)
         ctable = band.GetColorTable()
         if ctable is not None:
@@ -431,6 +433,95 @@ class RasterBand(RasterBase, np.ndarray):
 
     def __init__(self, ds, band_number=1):
         pass
+
+    def to_gdal(self, driver="MEM", path=''):
+        """Convert to a gdal dataset."""
+        drv = gdal.GetDriverByName(driver)
+        ds = drv.Create(path, self.xsize, self.ysize, 1, self.gdal_type)
+        ds.SetGeoTransform(self.GetGeoTransform())
+        ds.SetProjection(self.proj.ExportToWkt())
+        band = ds.GetRasterBand(1)
+        ctable = gdal.ColorTable()
+        for i, c in enumerate(self.colors):
+            ctable.SetColorEntry(i, tuple(c))
+        band.SetColorTable(ctable)
+        band.WriteArray(self)
+        band.FlushCache()
+        return ds
+
+    def transform(self, proj, size=None, method="nneighbour"):
+        """
+        A sample function to reproject and resample a GDAL dataset from within
+        Python. The idea here is to reproject from one system to another, as well
+        as to change the pixel size. The procedure is slightly long-winded, but
+        goes like this:
+
+        1. Set up the two Spatial Reference systems.
+        2. Open the original dataset, and get the geotransform
+        3. Calculate bounds of new geotransform by projecting the UL corners
+        4. Calculate the number of pixels with the new projection & spacing
+        5. Create an in-memory raster dataset
+        6. Perform the projection
+        """
+        methods = {"mean": gdal.GRA_Average,
+                   "bilinear": gdal.GRA_Bilinear,
+                   "cubic": gdal.GRA_Cubic,
+                   "cubic-spline": gdal.GRA_CubicSpline,
+                   "lanczos": gdal.GRA_Lanczos,
+                   "mode": gdal.GRA_Mode,
+                   "nneighbour": gdal.GRA_NearestNeighbour}
+
+        if method not in methods:
+            raise ValueError("methods must be one of: %s" % methods.keys())
+
+        tx = osr.CoordinateTransformation(self.proj, proj)
+
+        geo_t = self.GetGeoTransform()
+        if size is None:
+            x_size = self.RasterXSize
+            y_size = self.RasterYSize
+        else:
+            x_size, y_size = size
+
+        # Work out the boundaries of the new dataset in the target projection
+        (ulx, uly, ulz) = tx.TransformPoint(geo_t[0], geo_t[3])
+        (lrx, lry, lrz) = tx.TransformPoint(geo_t[0] + geo_t[1]*x_size,
+                                            geo_t[3] + geo_t[5]*y_size)
+        x_px_size = (lrx - ulx) * 1./x_size
+        y_px_size = (lry - uly) * 1./y_size
+
+        mem_drv = gdal.GetDriverByName('MEM')
+        src = self.to_gdal()
+
+        dest = mem_drv.Create('', x_size, y_size, 1, self.gdal_type)
+        # Calculate the new geotransform
+        new_geo = (ulx, x_px_size, geo_t[2], uly, geo_t[4], y_px_size)
+        # Set the geotransform
+        dest.SetGeoTransform(new_geo)
+        dest.SetProjection(proj.ExportToWkt())
+
+        # Perform the projection/resampling
+        res = gdal.ReprojectImage(src, dest, self.proj.ExportToWkt(),
+                                  proj.ExportToWkt(),
+                                  methods[method])
+        assert res == 0
+        rb = RasterBand(dest)
+        rb.colors = np.copy(self.colors)
+        dest = None
+        src = None
+        return rb
+
+    def to_wgs84(self, method="nneighbour"):
+        return self.transform(projection_from_epsg(4326), method=method)
+
+    def save(self, path, format="GTiff"):
+        self.to_gdal(format, path)
+
+    def to_rgb(self):
+        return slib.create_image_array(self, self.colors)
+
+    def save_png(self, path):
+        imsave(path, self.to_rgb())
 
 
 class RasterQueryResult:
@@ -831,14 +922,14 @@ class RasterDataset(RasterBase):
 
                 yield RasterQueryResult(id, values, weights)
 
-            if tiles_to_ids is None:
-                continue
+            #if tiles_to_ids is None:
+            #   continue
 
             #Remove raster bands that are empty
-            empty = [k for k, v in tiles_to_ids.iteritems() if len(v) == 0]
-            for e in empty:
-                del self.raster_arrays[e]
-                del tiles_to_ids[e]
+            #empty = [k for k, v in tiles_to_ids.iteritems() if len(v) == 0]
+            #for e in empty:
+            #    del self.raster_arrays[e]
+            #    del tiles_to_ids[e]
 
 
 def read_catalog(dataset_catalog_file):

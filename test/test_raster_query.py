@@ -58,20 +58,14 @@ class TestRasterQuery:
         res = []
 
         for r in generator:
-            try:
-                res.append(compute_stats(r.values, r.weights))
-            except:
-                print r.id
-                print r.values
-                print r.weights
-                print self.vl[[r.id]].to_json()
-                raise
+            res.append(compute_stats(r.values, r.weights))
             index.append(r.id)
 
         return pd.DataFrame(res, index=index)
 
     def test_shapes_outside_raster_should_be_filtered(self):
-        # 2 shapes in IL that should be in range, plus 2 shapes in CA that should be out of range.
+        # 2 shapes in IL that should be in range,
+        # plus 2 shapes in CA that should be out of range.
         p = get_path("vector/clu/four_shapes_2il_2ca.geojson")
         vl_outside, vl_df = read_geojson(p)
         assert (len(vl_outside.keys()) == 4)
