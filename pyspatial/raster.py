@@ -434,6 +434,21 @@ class RasterBand(RasterBase, np.ndarray):
     def __init__(self, ds, band_number=1):
         pass
 
+    def __array_finalize__(self, obj):
+        # see InfoArray.__array_finalize__ for comments
+        if obj is None:
+            return
+
+        cols = ['xsize', 'ysize', 'geo_transform',
+                'RasterXSize', 'RasterYSize',
+                'min_lon', 'min_lat', 'max_lat',
+                'lon_px_size', 'lat_px_size',
+                'pixel_area', 'proj', 'gdal_type',
+                'colors', 'nan']
+
+        for c in cols:
+            setattr(self, c, getattr(obj, c, None))
+
     def to_gdal(self, driver="MEM", path=''):
         """Convert to a gdal dataset."""
         drv = gdal.GetDriverByName(driver)
@@ -441,10 +456,11 @@ class RasterBand(RasterBase, np.ndarray):
         ds.SetGeoTransform(self.GetGeoTransform())
         ds.SetProjection(self.proj.ExportToWkt())
         band = ds.GetRasterBand(1)
-        ctable = gdal.ColorTable()
-        for i, c in enumerate(self.colors):
-            ctable.SetColorEntry(i, tuple(c))
-        band.SetColorTable(ctable)
+        if self.colors is not None:
+            ctable = gdal.ColorTable()
+            for i, c in enumerate(self.colors):
+                ctable.SetColorEntry(i, tuple(c))
+                band.SetColorTable(ctable)
         band.WriteArray(self)
         band.FlushCache()
         return ds
