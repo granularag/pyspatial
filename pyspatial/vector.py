@@ -832,6 +832,77 @@ class VectorLayer(pd.Series):
 
         return self.transform(proj).areas()
 
+    def _get_length(self, shp):
+        import math
+        import numpy as np
+        points = []
+        for p in xrange(shp.GetPointCount()):
+            points.append((shp.GetX(p), shp.GetY(p)))
+        Nedges = len(points)-1
+        length = []
+        for i in xrange(Nedges):
+            ax, ay = points[i]
+            bx, by = points[i+1]
+            length.append(math.hypot(bx-ax, by-ay))
+        return np.sum(length)
+
+    def _get_perimeter(self, shp):
+        perim = 0
+        ## force multipolygon on polygons for consistent structure
+        if shp.GetGeometryType() == ogr.wkbPolygon:
+            shp = ogr.ForceToMultiPolygon(shp)
+        for geom_num in range(shp.GetGeometryCount()):
+            shp_inner = shp.GetGeometryRef(geom_num)
+            for geom_num_2 in range(shp_inner.GetGeometryCount()):
+                shp_2 = shp_inner.GetGeometryRef(geom_num_2)
+                perim += self._get_length(shp_2)
+        return perim
+
+
+    def perimeters(self, proj=None):
+        """Compute the perimeter for each of the shapes in the vector
+        layer.
+
+        Parameters
+        ----------
+        proj: string or osr.SpatialReference (default=None)
+            valid strings are 'albers' or 'utm'. If None, no
+            transformation of coordinates.
+
+        Returns
+        -------
+        pandas.Series
+
+
+        Note
+        ----
+        'utm' should only be used for small polygons when centimeter
+        level accuracy is needed.  Otherwise the area will
+        be incorrect.  Similar issues can happen when polygons cross
+        utm boundaries.
+        """
+
+        if proj is None:
+            return self.map(lambda x: self._get_perimeter(x))
+
+        if proj == 'utm':
+            if self.proj.ExportToProj4().strip() != ut.PROJ_WGS84:
+                vl = self.transform(ut.projection_from_string())
+            else:
+                vl = self
+
+            ## to fix, I needed to assign a projection for the to_geometry to work
+            vl = vl.to_shapely().map(lambda x: to_geometry(ops.transform(to_utm, x), proj=ut.projection_from_string()))
+            perimeters = [self._get_perimeter(shp) for shp in vl.values]
+            s = pd.Series(perimeters, index=self.index)
+            s.name = "perimeter_m"
+            return s
+
+        elif proj == 'albers':
+            proj = ut.projection_from_string(ut.ALBERS_N_AMERICA)
+
+        return self.transform(proj).perimeters()
+
     def distances(self, shp, proj=None):
         """Compute the euclidean distances for each of the shapes in the vector
         layer. If proj is not none, it will transform shp into proj.
