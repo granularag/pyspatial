@@ -338,7 +338,7 @@ class VectorLayer(pd.Series):
         http://toblerity.org/shapely/manual.html#object.intersects
 
         """
-        shp = to_geometry(shp, proj=self.proj)
+        shp = to_geometry(shp, copy=True, proj=self.proj)
         _shp, ids = self._get_index_intersection(shp)
         ids = [i for i in ids if self[i].Intersect(shp)]
 
