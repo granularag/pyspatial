@@ -1,25 +1,25 @@
 """
-Copyright (c) 2016, Granular, Inc. 
+Copyright (c) 2016, Granular, Inc.
 All rights reserved.
 License: BSD 3-Clause ("BSD New" or "BSD Simplified")
 
-Redistribution and use in source and binary forms, with or without modification, are permitted 
-provided that the following conditions are met: 
+Redistribution and use in source and binary forms, with or without modification, are permitted
+provided that the following conditions are met:
 
-  * Redistributions of source code must retain the above copyright notice, this list of conditions 
+  * Redistributions of source code must retain the above copyright notice, this list of conditions
     and the following disclaimer.
-  * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the 
-    following disclaimer in the documentation and/or other materials provided with the distribution. 
-  * Neither the name of the nor the names of its contributors may be used to endorse or promote products 
+  * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the
+    following disclaimer in the documentation and/or other materials provided with the distribution.
+  * Neither the name of the nor the names of its contributors may be used to endorse or promote products
     derived from this software without specific prior written permission.
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS 
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
 OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
- AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL BE LIABLE FOR ANY DIRECT, 
-INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, 
+ AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL BE LIABLE FOR ANY DIRECT,
+INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
@@ -27,6 +27,7 @@ import os
 import pickle
 import pyspatial.vector as vt
 from pyspatial.utils import projection_from_string, ALBERS_N_AMERICA
+from pyspatial.utils import projection_from_epsg
 from pyspatial.spatiallib import haversine
 from osgeo import ogr
 from nose.tools import assert_raises, assert_almost_equal
@@ -106,13 +107,12 @@ def test_read():
     assert len(vt.read_layer(path)[0]) == 56
 
     paths = ["http://eric.clst.org/wupl/Stuff/gz_2010_us_040_00_500k.json",
-             "s3://granular-raster/test/gz_2010_us_040_00_500k.json",
              get_path("gz_2010_us_040_00_500k.json")]
 
     for path in paths:
         assert len(vt.read_geojson(path)[0]) == 52
 
-    geojson_str = open(paths[2]).read()
+    geojson_str = open(paths[1]).read()
     assert len(vt.read_geojson(geojson_str)[0]) == 52
 
 
@@ -128,6 +128,9 @@ class TestVectorLayer:
         cls.vl2, cls.df2 = vt.read_geojson(path2)
         cls.counties, cls.df3 = vt.read_geojson(path3, index="NAME")
         cls.sf = "San Francisco"
+        proj = projection_from_epsg()
+        rect.AssignSpatialReference(proj)
+        farallon.AssignSpatialReference(proj)
         cls.counties[cls.sf] = cls.counties[cls.sf].Difference(farallon)
         cls.zips, cls.df4 = vt.read_geojson(path4, index="ZCTA5CE10")
         p = get_path("clu/four_shapes_2il_2ca.p")

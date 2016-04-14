@@ -1,25 +1,25 @@
 """
-Copyright (c) 2016, Granular, Inc. 
+Copyright (c) 2016, Granular, Inc.
 All rights reserved.
 License: BSD 3-Clause ("BSD New" or "BSD Simplified")
 
-Redistribution and use in source and binary forms, with or without modification, are permitted 
-provided that the following conditions are met: 
+Redistribution and use in source and binary forms, with or without modification, are permitted
+provided that the following conditions are met:
 
-  * Redistributions of source code must retain the above copyright notice, this list of conditions 
+  * Redistributions of source code must retain the above copyright notice, this list of conditions
     and the following disclaimer.
-  * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the 
-    following disclaimer in the documentation and/or other materials provided with the distribution. 
-  * Neither the name of the nor the names of its contributors may be used to endorse or promote products 
+  * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the
+    following disclaimer in the documentation and/or other materials provided with the distribution.
+  * Neither the name of the nor the names of its contributors may be used to endorse or promote products
     derived from this software without specific prior written permission.
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS 
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
 OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
- AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL BE LIABLE FOR ANY DIRECT, 
-INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, 
+ AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL BE LIABLE FOR ANY DIRECT,
+INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
@@ -136,8 +136,6 @@ def to_geometry(shp, copy=False, proj=None):
         ct = CoordinateTransformation(source_proj, target_proj)
         geom.Transform(ct)
         geom.AssignSpatialReference(target_proj)
-        if not geom.IsValid():
-            geom.Buffer(0)
 
     return geom
 
@@ -340,7 +338,8 @@ class VectorLayer(pd.Series):
         http://toblerity.org/shapely/manual.html#object.intersects
 
         """
-        shp = to_geometry(shp, copy=True, proj=self.proj)
+
+        shp = to_geometry(shp, proj=self.proj)
         _shp, ids = self._get_index_intersection(shp)
         ids = [i for i in ids if self[i].Intersect(shp)]
 
@@ -384,7 +383,7 @@ class VectorLayer(pd.Series):
         http://toblerity.org/shapely/manual.html#object.contains
 
         """
-        shp = to_geometry(shp, copy=True, proj=self.proj)
+        shp = to_geometry(shp)
         _shp, ids = self._get_index_intersection(shp)
         ids = [i for i in ids if self[i].Contains(shp)]
         ids = self._make_ids(ids)
@@ -426,7 +425,7 @@ class VectorLayer(pd.Series):
         --------
         http://toblerity.org/shapely/manual.html#object.within"""
 
-        shp = to_geometry(shp, copy=True, proj=self.proj)
+        shp = to_geometry(shp)
         _shp, ids = self._get_index_intersection(shp)
         ids = [i for i in ids if self[i].Within(shp)]
         ids = self._make_ids(ids)
@@ -467,7 +466,7 @@ class VectorLayer(pd.Series):
         --------
         http://toblerity.org/shapely/manual.html#object.crosses"""
 
-        shp = to_geometry(shp, copy=True, proj=self.proj)
+        shp = to_geometry(shp)
         _shp, ids = self._get_index_intersection(shp)
         ids = [i for i in ids if self[i].Crosses(shp)]
         ids = self._make_ids(ids)
@@ -509,7 +508,7 @@ class VectorLayer(pd.Series):
         http://toblerity.org/shapely/manual.html#object.touches
         """
 
-        shp = to_geometry(shp, copy=True, proj=self.proj)
+        shp = to_geometry(shp)
         _shp, ids = self._get_index_intersection(shp)
         ids = [i for i in ids if self[i].Touches(shp)]
         ids = self._make_ids(ids)
@@ -552,7 +551,7 @@ class VectorLayer(pd.Series):
 
         """
 
-        shp = to_geometry(shp, copy=True, proj=self.proj)
+        shp = to_geometry(shp)
         _shp, ids = self._get_index_intersection(shp)
         ids = [i for i in ids if self[i].Equals(shp)]
         ids = self._make_ids(ids)
@@ -593,7 +592,7 @@ class VectorLayer(pd.Series):
         http://toblerity.org/shapely/manual.html#object.disjoint
         """
 
-        shp = to_geometry(shp, copy=True, proj=self.proj)
+        shp = to_geometry(shp)
         _shp, ids = self._get_index_intersection(shp)
         ids = self.index.difference(self._make_ids(ids))
 
@@ -619,7 +618,7 @@ class VectorLayer(pd.Series):
     def _set_theoretic_methods(self, method, shp, reverse=False):
         vl = self.intersects(shp)
 
-        shp = to_geometry(shp)
+        shp = to_geometry(shp, proj=self.proj, copy=True)
 
         if isinstance(shp, list):
             raise ValueError("Collections of shapes are not supported!")
@@ -751,7 +750,6 @@ class VectorLayer(pd.Series):
         ct = CoordinateTransformation(self.proj, target_proj)
         geoms = [g.Clone() for g in self]
         [g.Transform(ct) for g in geoms]
-        [g.Buffer(0) for g in geoms if not g.IsValid()]
         return VectorLayer(geoms, proj=target_proj, index=self.index)
 
     def to_wgs84(self):
