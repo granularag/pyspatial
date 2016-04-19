@@ -1,7 +1,6 @@
 # Overview
 
-pyspatial is python package to provide data structures on top of gdal/ogr. It's core use cases have been around simplifying geospatial data science
-workflows in Python.  The 3 core data stuctures are:
+pyspatial is python package to provide data structures on top of gdal/ogr. Its core use cases have been around simplifying geospatial data science workflows in Python.  The 3 core data stuctures are:
 
 * VectorLayer: a collection of geometries with pandas like manipulation.  Each geometry is an osgeo.ogr.Geometry object. For an object reference see [http://gdal.org/python/].
 * RasterDataset: an abstraction of a spatial raster (both tiled on untiled) to support querying of pixels that intersect with shapes.
@@ -14,7 +13,7 @@ pyspatial makes it easy to read, analyze, query, and visualize spatial data in b
   * Read/write both raster and vector data (including support for http/s3 sources).  Also convert to/from shapely/gdal/ogr/numpy objects seamlessly.
   * Fast spatial queries since it leverages GDAL and libspatialindex/RTree. For extracting vector data from a raster, the library is 60x - 100x faster than R.
   * Integration of vector/raster data structures to make interoperation seamless.
-  * Pandas like API for working with collections of geometries.
+  * Pandas-like API for working with collections of geometries.
   * First class support for spatial projections. The data structures are spatial projection aware, and allow you to easily transform between projections.
   * When performing operations between data sources, the data will automatically be reprojected intelligently.  No more spatial projection management!
   * Integrated interactive visualization within IPython (via Leaflet).  Plots markers, geometries, and choropleths too!
