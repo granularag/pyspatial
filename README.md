@@ -29,6 +29,9 @@ http://nbviewer.jupyter.org/github/granularag/pyspatial/tree/master/examples/
 * Cython code: python setup.py build_ext --inplace
 * Tests: nosetests -v
 
+## TODOs
+* Add support for tiles created by gdal2tiles in RasterDataset. It's just a matter of modifying RasterDataset._get_value_for_pixel Currently it assumes format of path + "%d_%d.tif".  Where the %d are (x, y) coordinates of the upper left corner of the raster tile in pixel space.  This is obviously far to specific.  We could instead pass this as a function which takes a pixel of [x,y] (in pixel coordinates) and returns the value from the tiled raster at this pixel.  Alternatively, we could have an argument called "tile_format" or something  to raster dataset that would just dispatch to the correct functions. This would invole adding a band_number argument and passing it to any calls to read_vsimem in RasterDataset.
+
 # Known Issues
 
 * In ogr, when you get the centroid of a geometry (e.g. cent = my_geometry.Centroid()), cent does not inherit the spatial reference. It needs to be reassigned using cent.AssignSpatialReference(my_geometry.GetSpatialReference())
