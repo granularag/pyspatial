@@ -31,6 +31,7 @@ http://nbviewer.jupyter.org/github/granularag/pyspatial/tree/master/examples/
 
 ## TODOs
 * Add support for tiles created by gdal2tiles in RasterDataset. It's just a matter of modifying `RasterDataset._get_value_for_pixel` Currently it assumes format of `self.path + "%d_%d.tif"`.  Where the %d are `(x, y)` coordinates of the upper left corner of the raster tile in pixel space.  This is obviously far to specific.  We could instead pass this as a function which takes a pixel of `[x,y]` (in pixel coordinates) and returns the value from the tiled raster at this pixel.  Alternatively, we could have an argument called "tile_format" or something  to raster dataset that would just dispatch to the correct functions. This would also involve adding a band_number argument and passing it to any calls to read_vsimem in RasterDataset.
+* Adjust timed tests.  Currently calibrated to a early Macbook Pro 15" with Core i7.  These tend to fail on many other machines.  Should either remove the @timed decorators, or figure out what a reasonable time is for the tests.
 
 # Known Issues
 
