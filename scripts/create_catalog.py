@@ -28,7 +28,7 @@ import argparse
 import json
 from pyspatial.vector import read_layer, read_geojson
 from pyspatial.utils import projection_from_string
-import gdal
+from osgeo import gdal
 
 
 if __name__ == "__main__":
@@ -74,7 +74,12 @@ if __name__ == "__main__":
 
     if args.tile_path is not None:
         if os.path.exists(args.tile_path):
-            tiles = os.listdir(args.tile_path)
+            tiles = []
+            for dirname, subdirList, filename_list in os.walk(args.tile_path):
+                for filename in filename_list:
+                    tile_abspath = os.path.abspath(os.path.join(dirname, filename))
+                    tiles.append(tile_abspath)
+
             if len(tiles) == 0:
                 raise ValueError("%s is empty" % args.tile_path)
 
@@ -94,12 +99,14 @@ if __name__ == "__main__":
             raise ValueError("tiles path does not exist: %s" % args.tile_path)
 
     if args.index_path is not None:
-        read = read_geojson if args.index_path.endswith("json") else read_layer
-        index = read(args.index_path)
+        if args.index_path.endswith("json"):
+            index, index_df = read_geojson(args.index_path)
+        else:
+            index = read_layer(args.index_path)
         catalog["Index"] = index.transform(projection_from_string()).to_dict()
 
     if args.dest is not None:
         with open(args.dest, "w+b") as outf:
-            outf.write(json.dumps(catalog))
+            outf.write(json.dumps(catalog, indent=4, sort_keys=True))
     else:
-        print json.dumps(catalog)
+        print json.dumps(catalog, indent=4, sort_keys=True)

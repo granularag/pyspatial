@@ -22,7 +22,6 @@ HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABI
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
-
 import json
 import os
 from smart_open import ParseUri
@@ -731,26 +730,25 @@ class RasterDataset(RasterBase):
 
         """
         # Compute which grid tile to read
-        key = self._get_grid_for_pixel(px)
-        x_grid, y_grid = key
+        x_grid, y_grid = self._get_grid_for_pixel(px)
 
         # If we haven't already read this grid tile into memory, do so now,
         # and store it in raster_arrays for future queries to access.
         if (x_grid, y_grid) not in self.raster_arrays:
-            filename = self.path + "%d_%d.tif" % key
-            self.raster_arrays[key] = read_vsimem(filename)
+            filename = self.path + "%d_%d.tif" % (x_grid, y_grid)
+            self.raster_arrays[(x_grid, y_grid)] = read_vsimem(filename)
             if self.dtype is None:
-                self.dtype = self.raster_arrays[key].dtype
+                self.dtype = self.raster_arrays[(x_grid, y_grid)].dtype
 
         # Look up the grid tile for this pixel.
-        raster = self.raster_arrays[key]
+        raster = self.raster_arrays[(x_grid, y_grid)]
 
         # Look up the value in the x,y offset in the grid tile we just found
         # or read, and return it.
         x_px = px[0] - x_grid
         y_px = px[1] - y_grid
 
-        return raster[y_px][x_px]
+        return raster[:, y_px, x_px]
 
     def _get_grid_for_pixel(self, px):
         """Compute the min_x, min_y of the tile that contains pixel,
@@ -883,11 +881,11 @@ class RasterDataset(RasterBase):
         values are the pixel values from the raster.  the weights are the fraction
         of the pixel that is occupied by the polgon.
         """
-
         if self.proj.ExportToProj4() != vector_layer.proj.ExportToProj4():
             # Transform all vector shapes into raster projection.
             vl = vector_layer.transform(self.proj)
-
+        else:
+            vl = vector_layer
         # Filter out all shapes outside the raster bounds
         bbox = self.bbox()
         vl = vl.within(bbox)
