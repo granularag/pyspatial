@@ -52,3 +52,28 @@ cd pyspatial
 pip install -r requirements.txt
 pip install .
 ```
+
+# Ubuntu 14.04
+```bash
+# install the system dependencies
+sudo apt-get update
+sudo apt-get install libgdal-dev
+sudo apt-get install libspatialindex-dev
+sudo apt-get install libblas-dev liblapack-dev libatlas-base-dev gfortran
+
+# create python virtual environment
+virtualenv venv
+source venv/bin/activate
+
+# update GDAL version in requirements.txt to match system version 
+# (GDAL 2.0.2 doesn’t seem to be available in any PPA)
+# GDAL==1.11.2
+
+# install python dependencies
+pip install -r requirements-dev.txt
+pip install -r requirements.txt
+pip install -e .
+
+# run the tests
+nosetests -v
+```
