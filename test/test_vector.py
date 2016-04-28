@@ -248,3 +248,9 @@ def test_intersects():
 
     soils.intersects(shape[0])
     assert (shape[0].IsValid())
+
+def test_to_json():
+    shape, _ = vt.read_geojson(get_path('test_shape.json'))
+    j = shape.to_json()
+    jj = shape.read_geojson(j)
+    assert jj[0][0].IsValid()
