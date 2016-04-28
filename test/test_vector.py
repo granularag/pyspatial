@@ -26,6 +26,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import os
 import pickle
 import pyspatial.vector as vt
+from smart_open import smart_open
 from pyspatial.utils import projection_from_string, ALBERS_N_AMERICA
 from pyspatial.utils import projection_from_epsg
 from pyspatial.spatiallib import haversine
@@ -229,3 +230,14 @@ class TestVectorLayer:
         rdifference_act = counties[sf].difference(rect, kind="right")
         assert_almost_equal(rdifference_act[self.sf].GetArea()/1e6,
                             rdifference_exp)
+
+    def test_intersects(self):
+        with smart_open('s3:granular-labs/sandra/temp/test_layer.json', 'r') as f:
+            s = f.read()
+            shape = wkt.loads(s)
+            shape = from_series(pd.Series(data=[shape]))
+        with smart_open('s3:granular-labs/sandra/temp/test_soils.json', 'r') as f:
+            soils = f.read()
+            soils = read_geojson(soils)[0]
+        soils.intersects(shape[0])
+        assert (shape[0].IsValid())
