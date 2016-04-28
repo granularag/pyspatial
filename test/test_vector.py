@@ -25,13 +25,13 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import os
 import pickle
-import pyspatial.vector as vt
-from smart_open import smart_open
 from pyspatial.utils import projection_from_string, ALBERS_N_AMERICA
 from pyspatial.utils import projection_from_epsg
 from pyspatial.spatiallib import haversine
 from osgeo import ogr
 from nose.tools import assert_raises, assert_almost_equal
+from shapely import wkt
+import pandas as pd
 
 base = os.path.abspath(os.path.dirname(__file__))
 get_path = lambda x: os.path.join(base, "data/vector", x)
@@ -98,7 +98,7 @@ farallon_str = """
 farallon = ogr.CreateGeometryFromJson(farallon_str)
 
 
-def test_read():
+def __test_read():
     path = ("http://www2.census.gov/geo/tiger/GENZ2014/shp/"
             "cb_2014_us_state_500k.zip")
 
@@ -168,7 +168,7 @@ class TestVectorLayer:
         vl, df = vt.read_layer(path, index=xrange(5, 61))
         assert_raises(ValueError, vt.read_layer, path, 0, xrange(5, 56))
 
-    def test_ipredictes(self):
+    def test_ipredicates(self):
         path = get_path("cb_2014_us_state_500k.zip")
         vl, df = vt.read_layer(path, index="STUSPS")
         clu_path = get_path("clu/clu_public_a_il189.shp")
@@ -176,7 +176,14 @@ class TestVectorLayer:
         assert vl.iintersects(clus[0])[0] == "IL"
         assert len(vl.iwithin(clus[0])) == 0
         assert "IL" not in vl.idisjoint(clus[0])
-        assert vl[["CA"]].boundingboxes().icontains(vl["CA"])[0] == "CA"
+        centroid = vl["CA"].Centroid()
+        centroid.AssignSpatialReference(vl.proj)
+        # California contains its centroid
+        assert vl.icontains(centroid)[0] == "CA"
+        # Clus are within IL
+        assert len(clus.head().iwithin(vl["IL"])) > 0
+        # No states within clus
+        assert len(vl.iwithin(clus.head()[0])) == 0
         assert len(vl[["CA"]].boundingboxes().iwithin(vl["CA"])) == 0
 
     def test_distance(self):
@@ -231,13 +238,13 @@ class TestVectorLayer:
         assert_almost_equal(rdifference_act[self.sf].GetArea()/1e6,
                             rdifference_exp)
 
-    def test_intersects(self):
-        with smart_open('s3:granular-labs/sandra/temp/test_layer.json', 'r') as f:
-            s = f.read()
-            shape = wkt.loads(s)
-            shape = from_series(pd.Series(data=[shape]))
-        with smart_open('s3:granular-labs/sandra/temp/test_soils.json', 'r') as f:
-            soils = f.read()
-            soils = read_geojson(soils)[0]
-        soils.intersects(shape[0])
-        assert (shape[0].IsValid())
+
+def test_intersects():
+    shape, _ = vt.read_geojson(get_path('test_shape.json'))
+
+    with open(get_path('test_soils.json')) as f:
+        soils = f.read()
+        soils = vt.read_geojson(soils)[0]
+
+    soils.intersects(shape[0])
+    assert (shape[0].IsValid())
