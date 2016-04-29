@@ -684,7 +684,7 @@ class RasterDataset(RasterBase):
     """
 
     def __init__(self, path_or_ds, xsize, ysize, geo_transform, proj,
-                 grid_size=None, index=None, tile_structure="%d_%d.tif", tms_z=None):
+                 grid_size=None, index=None, tile_structure=None, tms_z=None):
         ds = None
 
         if not isinstance(path_or_ds, gdal.Dataset):
@@ -697,7 +697,10 @@ class RasterDataset(RasterBase):
         self.proj = proj
         self.grid_size = grid_size
         self.index = index
-        self.tile_structure = tile_structure
+        if tile_structure:
+            self.tile_structure = tile_structure
+        else:
+            self.tile_structure = "%d_%d.tif"
         self.tms_z = tms_z
 
         self.raster_arrays = {}
@@ -774,20 +777,21 @@ class RasterDataset(RasterBase):
             x_px = px[0] - x_grid
             y_px = px[1] - y_grid
 
-        # print 'x_grid, y_grid, x_px, y_px', x_grid, y_grid, x_px, y_px
-
         # If we haven't already read this grid tile into memory, do so now,
         # and store it in raster_arrays for future queries to access.
         if (x_grid, y_grid) not in self.raster_arrays:
             filename = self.path + self.tile_structure % (x_grid, y_grid)
-            self.raster_arrays[(x_grid, y_grid)] = read_vsimem(filename)
+            self.raster_arrays[(x_grid, y_grid)] = read_vsimem(filename) # TODO?: band_number argument doesn't change anything, all the bands are read
             if self.dtype is None:
                 self.dtype = self.raster_arrays[(x_grid, y_grid)].dtype
 
         # Look up the grid tile for this pixel.
         raster = self.raster_arrays[(x_grid, y_grid)]
 
-        return raster[:, y_px, x_px]
+        if raster.ndim == 2: # grayscale
+            return raster[y_px][x_px]
+        elif raster.ndim == 3: # RGBA+
+            return raster[:, y_px, x_px] # GDAL style dimensions order
 
     def _get_grid_for_pixel(self, px):
         """Compute the min_x, min_y of the tile that contains pixel,
@@ -987,10 +991,8 @@ class RasterDataset(RasterBase):
                                      int_outline=int_outline,
                                      int_fill=int_fill,
                                      scale_factor=scale_factor).T
-                    print 'mask.shape', mask.shape
 
                     minx, miny, maxx, maxy = shp.bounds
-                    print 'minx, miny, maxx, maxy', minx, miny, maxx, maxy
                     idx = np.argwhere(mask > 0)
 
                     if idx.shape[0] == 0:
@@ -1054,6 +1056,9 @@ def read_catalog(dataset_catalog_file):
         index, index_df = read_geojson(json.dumps(decoded["Index"]),
                                        index="location")
         index = index.transform(proj)
+
+    if "Tile_structure" in decoded:
+        tile_structure = decoded["Tile_structure"]
 
     return RasterDataset(path, size[0], size[1], transform, proj,
                          grid_size=grid_size, index=index,
