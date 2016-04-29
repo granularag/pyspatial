@@ -24,6 +24,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 import json
 import os
+import math
 from smart_open import ParseUri
 from boto import connect_s3
 import re
@@ -730,12 +731,49 @@ class RasterDataset(RasterBase):
 
         """
         # Compute which grid tile to read
-        x_grid, y_grid = self._get_grid_for_pixel(px)
+        TMS = True # TODO: self.tms
+        tms_z = 19 # TODO: self.tms_z
+        # TODO: self.nb_bands
+        if TMS:
+            x_grid_offset, y_grid_offset = self._get_grid_for_pixel(px)
+
+            gt = self.GetGeoTransform()
+            min_lon, max_lat = gt[0], gt[3] # lon, lat of upper left corner
+
+            # get the tile TMS {x} {y} of the center of the upper left tile (0,0) 
+            upper_left_tile_center_x = int(math.floor(self.grid_size / 2))
+            upper_left_tile_center_y = int(math.floor(self.grid_size / 2))
+            upper_left_tile_center_Lon = gt[0] + upper_left_tile_center_x * gt[1] + upper_left_tile_center_y * gt[2]
+            upper_left_tile_center_Lat = gt[3] + upper_left_tile_center_y * gt[4] + upper_left_tile_center_x * gt[5]
+    
+            import globalmaptiles
+            mercator = globalmaptiles.GlobalMercator()
+            mx, my = mercator.LatLonToMeters(upper_left_tile_center_Lat, upper_left_tile_center_Lon)
+            # Converts given lat/lon in WGS84 Datum to XY in Spherical Mercator EPSG:900913/3857
+
+            tms_x, tms_y = mercator.MetersToTile(mx,my, tms_z)
+            # Returns tile for given Sperical mercator coordinates
+
+            x_grid = tms_x + x_grid_offset / self.grid_size
+            y_grid = tms_y - y_grid_offset / self.grid_size
+
+            x_px = px[0] - x_grid_offset
+            y_px = px[1] - y_grid_offset
+
+        else:
+            x_grid, y_grid = self._get_grid_for_pixel(px)
+
+            # Look up the value in the x,y offset in the grid tile we just found
+            # or read, and return it.
+            x_px = px[0] - x_grid
+            y_px = px[1] - y_grid
+
+        print 'x_grid, y_grid, x_px, y_px', x_grid, y_grid, x_px, y_px
 
         # If we haven't already read this grid tile into memory, do so now,
         # and store it in raster_arrays for future queries to access.
         if (x_grid, y_grid) not in self.raster_arrays:
-            filename = self.path + "%d_%d.tif" % (x_grid, y_grid)
+            filename = self.path + "%d/%d.png" % (x_grid, y_grid)
             self.raster_arrays[(x_grid, y_grid)] = read_vsimem(filename)
             if self.dtype is None:
                 self.dtype = self.raster_arrays[(x_grid, y_grid)].dtype
@@ -743,11 +781,8 @@ class RasterDataset(RasterBase):
         # Look up the grid tile for this pixel.
         raster = self.raster_arrays[(x_grid, y_grid)]
 
-        # Look up the value in the x,y offset in the grid tile we just found
-        # or read, and return it.
-        x_px = px[0] - x_grid
-        y_px = px[1] - y_grid
 
+        # print x_grid, y_grid, x_px, y_px
         return raster[:, y_px, x_px]
 
     def _get_grid_for_pixel(self, px):
@@ -947,8 +982,10 @@ class RasterDataset(RasterBase):
                                      int_outline=int_outline,
                                      int_fill=int_fill,
                                      scale_factor=scale_factor).T
+                    print 'mask.shape', mask.shape
 
                     minx, miny, maxx, maxy = shp.bounds
+                    print 'minx, miny, maxx, maxy', minx, miny, maxx, maxy
                     idx = np.argwhere(mask > 0)
 
                     if idx.shape[0] == 0:
