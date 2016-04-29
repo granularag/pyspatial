@@ -50,7 +50,7 @@ from pyspatial import spatiallib as slib
 from pyspatial.vector import read_geojson, to_geometry, bounding_box
 from pyspatial.vector import VectorLayer
 from pyspatial.utils import projection_from_epsg
-
+from pyspatial import globalmaptiles
 
 NP2GDAL_CONVERSION = {
   "uint8": 1,
@@ -697,11 +697,11 @@ class RasterDataset(RasterBase):
         self.proj = proj
         self.grid_size = grid_size
         self.index = index
+
         if tile_structure:
             self.tile_structure = tile_structure
         else:
             self.tile_structure = "%d_%d.tif"
-        self.tms_z = tms_z
 
         self.raster_arrays = {}
         self.shapes_in_tiles = {}
@@ -709,6 +709,26 @@ class RasterDataset(RasterBase):
 
         # Initialize the base class with coordinate information.
         RasterBase.__init__(self, xsize, ysize, geo_transform, proj)
+
+        if tms_z:
+            self.tms_z = tms_z
+
+            # get the tile TMS {x} {y} of the center of the upper left tile (0,0) 
+            gt = self.GetGeoTransform()
+            upper_left_tile_center_x = int(math.floor(self.grid_size / 2))
+            upper_left_tile_center_y = int(math.floor(self.grid_size / 2))
+            upper_left_tile_center_Lon = gt[0] + upper_left_tile_center_x * gt[1] + upper_left_tile_center_y * gt[2]
+            upper_left_tile_center_Lat = gt[3] + upper_left_tile_center_y * gt[4] + upper_left_tile_center_x * gt[5]
+
+            mercator = globalmaptiles.GlobalMercator()
+            # Converts given lat/lon in WGS84 Datum to XY in Spherical Mercator EPSG:900913/3857
+            mx, my = mercator.LatLonToMeters(upper_left_tile_center_Lat, upper_left_tile_center_Lon)
+            # Returns tile for given Sperical mercator coordinates
+            self.tms_x, self.tms_y = mercator.MetersToTile(mx,my, self.tms_z)
+        else:
+            self.tms_z = None
+            self.tms_x = None
+            self.tms_y = None
 
         # Read raster file now if this is an untiled data set.
         if self.grid_size is None:
@@ -743,28 +763,13 @@ class RasterDataset(RasterBase):
         """
         # Compute which grid tile to read
         if self.tms_z: # gdal2tiles TMS z
-            x_grid_offset, y_grid_offset = self._get_grid_for_pixel(px)
+            x_grid_tmp, y_grid_tmp = self._get_grid_for_pixel(px)
 
-            gt = self.GetGeoTransform()
-            min_lon, max_lat = gt[0], gt[3] # lon, lat of upper left corner
+            x_grid_offset = x_grid_tmp / self.grid_size
+            y_grid_offset = y_grid_tmp / self.grid_size
 
-            # get the tile TMS {x} {y} of the center of the upper left tile (0,0) 
-            upper_left_tile_center_x = int(math.floor(self.grid_size / 2))
-            upper_left_tile_center_y = int(math.floor(self.grid_size / 2))
-            upper_left_tile_center_Lon = gt[0] + upper_left_tile_center_x * gt[1] + upper_left_tile_center_y * gt[2]
-            upper_left_tile_center_Lat = gt[3] + upper_left_tile_center_y * gt[4] + upper_left_tile_center_x * gt[5]
-    
-            import globalmaptiles
-            mercator = globalmaptiles.GlobalMercator()
-
-            # Converts given lat/lon in WGS84 Datum to XY in Spherical Mercator EPSG:900913/3857
-            mx, my = mercator.LatLonToMeters(upper_left_tile_center_Lat, upper_left_tile_center_Lon)
-
-            # Returns tile for given Sperical mercator coordinates
-            tms_x, tms_y = mercator.MetersToTile(mx,my, self.tms_z)
-
-            x_grid = tms_x + x_grid_offset / self.grid_size
-            y_grid = tms_y - y_grid_offset / self.grid_size
+            x_grid = self.tms_x + x_grid_offset
+            y_grid = self.tms_y - y_grid_offset
 
             x_px = px[0] - x_grid_offset
             y_px = px[1] - y_grid_offset
