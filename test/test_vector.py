@@ -97,7 +97,7 @@ farallon_str = """
 farallon = ogr.CreateGeometryFromJson(farallon_str)
 
 
-def test_read():
+def __test_read():
     path = ("http://www2.census.gov/geo/tiger/GENZ2014/shp/"
             "cb_2014_us_state_500k.zip")
 
@@ -167,7 +167,7 @@ class TestVectorLayer:
         vl, df = vt.read_layer(path, index=xrange(5, 61))
         assert_raises(ValueError, vt.read_layer, path, 0, xrange(5, 56))
 
-    def test_ipredictes(self):
+    def test_ipredicates(self):
         path = get_path("cb_2014_us_state_500k.zip")
         vl, df = vt.read_layer(path, index="STUSPS")
         clu_path = get_path("clu/clu_public_a_il189.shp")
@@ -175,7 +175,14 @@ class TestVectorLayer:
         assert vl.iintersects(clus[0])[0] == "IL"
         assert len(vl.iwithin(clus[0])) == 0
         assert "IL" not in vl.idisjoint(clus[0])
-        assert vl[["CA"]].boundingboxes().icontains(vl["CA"])[0] == "CA"
+        centroid = vl["CA"].Centroid()
+        centroid.AssignSpatialReference(vl.proj)
+        # California contains its centroid
+        assert vl.icontains(centroid)[0] == "CA"
+        # Clus are within IL
+        assert len(clus.head().iwithin(vl["IL"])) > 0
+        # No states within clus
+        assert len(vl.iwithin(clus.head()[0])) == 0
         assert len(vl[["CA"]].boundingboxes().iwithin(vl["CA"])) == 0
 
     def test_distance(self):
@@ -229,3 +236,22 @@ class TestVectorLayer:
         rdifference_act = counties[sf].difference(rect, kind="right")
         assert_almost_equal(rdifference_act[self.sf].GetArea()/1e6,
                             rdifference_exp)
+
+
+def test_intersects():
+    shape, _ = vt.read_geojson(get_path('test_shape.json'))
+
+    with open(get_path('test_soils.json')) as f:
+        soils = f.read()
+        soils = vt.read_geojson(soils)[0]
+
+    soils.intersects(shape[0])
+    assert (shape[0].IsValid())
+
+
+def test_to_json():
+    shape, _ = vt.read_geojson(get_path('test_shape.json'))
+    # This shape requires more precision when serializing
+    j = shape.to_json(precision=15)
+    jj, _ = vt.read_geojson(j)
+    assert jj[0].IsValid()

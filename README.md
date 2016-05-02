@@ -39,6 +39,7 @@ http://nbviewer.jupyter.org/github/granularag/pyspatial/tree/master/examples/
 * VectorLayer object does not support a Float64Index
 * If you encouter:
   * "TypeError: object of type 'Geometry' has no len()", most likely you have duplicate values in your index.  Make sure your index is unique.
+* On some environments, calling shape.Intersection(point) for certain shape/point combinations causes python to crash. See [this gist](https://gist.github.com/sandra-granular/c5009e189d842ddf72878c41df77e03c)
 
 # Contributors
 

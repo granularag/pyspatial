@@ -339,7 +339,7 @@ class VectorLayer(pd.Series):
 
         """
 
-        shp = to_geometry(shp, proj=self.proj)
+        shp = to_geometry(shp, proj=self.proj, copy=True)
         _shp, ids = self._get_index_intersection(shp)
         ids = [i for i in ids if self[i].Intersect(shp)]
 
@@ -383,7 +383,7 @@ class VectorLayer(pd.Series):
         http://toblerity.org/shapely/manual.html#object.contains
 
         """
-        shp = to_geometry(shp)
+        shp = to_geometry(shp, proj=self.proj, copy=True)
         _shp, ids = self._get_index_intersection(shp)
         ids = [i for i in ids if self[i].Contains(shp)]
         ids = self._make_ids(ids)
@@ -425,7 +425,7 @@ class VectorLayer(pd.Series):
         --------
         http://toblerity.org/shapely/manual.html#object.within"""
 
-        shp = to_geometry(shp)
+        shp = to_geometry(shp, proj=self.proj, copy=True)
         _shp, ids = self._get_index_intersection(shp)
         ids = [i for i in ids if self[i].Within(shp)]
         ids = self._make_ids(ids)
@@ -466,7 +466,7 @@ class VectorLayer(pd.Series):
         --------
         http://toblerity.org/shapely/manual.html#object.crosses"""
 
-        shp = to_geometry(shp)
+        shp = to_geometry(shp, proj=self.proj, copy=True)
         _shp, ids = self._get_index_intersection(shp)
         ids = [i for i in ids if self[i].Crosses(shp)]
         ids = self._make_ids(ids)
@@ -508,7 +508,7 @@ class VectorLayer(pd.Series):
         http://toblerity.org/shapely/manual.html#object.touches
         """
 
-        shp = to_geometry(shp)
+        shp = to_geometry(shp, proj=self.proj, copy=True)
         _shp, ids = self._get_index_intersection(shp)
         ids = [i for i in ids if self[i].Touches(shp)]
         ids = self._make_ids(ids)
@@ -551,7 +551,7 @@ class VectorLayer(pd.Series):
 
         """
 
-        shp = to_geometry(shp)
+        shp = to_geometry(shp, proj=self.proj, copy=True)
         _shp, ids = self._get_index_intersection(shp)
         ids = [i for i in ids if self[i].Equals(shp)]
         ids = self._make_ids(ids)
@@ -592,7 +592,7 @@ class VectorLayer(pd.Series):
         http://toblerity.org/shapely/manual.html#object.disjoint
         """
 
-        shp = to_geometry(shp)
+        shp = to_geometry(shp, proj=self.proj, copy=True)
         _shp, ids = self._get_index_intersection(shp)
         ids = self.index.difference(self._make_ids(ids))
 
