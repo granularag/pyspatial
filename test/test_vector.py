@@ -31,7 +31,6 @@ from pyspatial.utils import projection_from_epsg
 from pyspatial.spatiallib import haversine
 from osgeo import ogr
 from nose.tools import assert_raises, assert_almost_equal
-import pandas as pd
 
 base = os.path.abspath(os.path.dirname(__file__))
 get_path = lambda x: os.path.join(base, "data/vector", x)
@@ -249,8 +248,10 @@ def test_intersects():
     soils.intersects(shape[0])
     assert (shape[0].IsValid())
 
+
 def test_to_json():
     shape, _ = vt.read_geojson(get_path('test_shape.json'))
-    j = shape.to_json()
-    jj = vt.read_geojson(j)
-    assert jj[0][0].IsValid()
+    # This shape requires more precision when serializing
+    j = shape.to_json(precision=15)
+    jj, _ = vt.read_geojson(j)
+    assert jj[0].IsValid()
