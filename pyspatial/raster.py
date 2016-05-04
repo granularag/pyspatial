@@ -73,7 +73,7 @@ def get_path(path):
     if uri.scheme == "file":
         path = uri.uri_path if os.path.exists(uri.uri_path) else None
 
-    elif uri.scale == "s3":
+    elif uri.scheme == "s3":
         conn = connect_s3()
         bucket = conn.get_bucket(uri.bucket_id)
         key = bucket.lookup(uri.key_id)
