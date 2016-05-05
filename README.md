@@ -22,6 +22,9 @@ pyspatial makes it easy to read, analyze, query, and visualize spatial data in b
 
 http://nbviewer.jupyter.org/github/granularag/pyspatial/tree/master/examples/
 
+# Questions?
+
+Send us a message on google groups: pyspatial-users@googlegroups.com
 
 # Development
 
@@ -50,3 +53,4 @@ http://nbviewer.jupyter.org/github/granularag/pyspatial/tree/master/examples/
 * Sandra Guteg (github: guetgs)
 * Emma Fuller (github: emfuller)
 * Alan Glennon (github: glennon)
+* James Russell (github: jamesdrussell)
