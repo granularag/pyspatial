@@ -30,7 +30,7 @@ from tempfile import mkdtemp
 from osgeo import ogr
 from osgeo import gdal
 from osgeo.gdalconst import GA_ReadOnly
-from smart_open import smart_open, ParseUri
+from pyspatial import fileutils
 from pyspatial.dataset import get_type
 
 gdal.SetConfigOption('GDAL_HTTP_UNSAFSSL', 'YES')
@@ -142,7 +142,7 @@ def read_in_chunks(file_object, chunk_size=4096):
 def upload(local_filename, remote_path, remove_local=False):
     """Upload a local file to a remote location.  Currently,
     only s3 is suppported"""
-    uri = ParseUri(remote_path)
+    uri = fileutils.parse_uri(remote_path)
     if remote_path.endswith("/"):
         fname = os.path.basename(local_filename)
         if uri.scheme == "file":
@@ -152,7 +152,7 @@ def upload(local_filename, remote_path, remove_local=False):
         else:
             raise ValueError("%s must be local or s3" % remote_path)
 
-    outf = smart_open(remote_path, "wb")
+    outf = fileutils.open(remote_path, "wb")
     with open(local_filename) as inf:
         for p in read_in_chunks(inf):
             outf.write(p)
@@ -172,7 +172,7 @@ def write_shapefile(vl, path, name=None, df=None,
     if driver == "ESRI ShapeFile":
         layer = vl.name if vl.name is not None else "layer_1"
 
-    uri = ParseUri(path)
+    uri = fileutils.parse_uri(path)
 
     if uri.scheme == "s3":
         path = mkdtemp()
