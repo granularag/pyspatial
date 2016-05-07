@@ -10,7 +10,7 @@ pyspatial makes it easy to read, analyze, query, and visualize spatial data in b
 
 ## Library Highlights
   * Battle tested: we use it for our day-to-day work, and for processing all the data behind AcreValue(https://www.acrevalue.com/).  In fact, all of our PostGIS workflows have been migrated to pyspatial.
-  * Read/write both raster and vector data (including support for http/s3 sources).  Also convert to/from shapely/gdal/ogr/numpy objects seamlessly.
+  * Read/write both raster and vector data (including support for http/s3/google cloud sources).  Also convert to/from shapely/gdal/ogr/numpy objects seamlessly.
   * Fast spatial queries since it leverages GDAL and libspatialindex/RTree. For extracting vector data from a raster, the library is 60x - 100x faster than R.
   * Integration of vector/raster data structures to make interoperation seamless.
   * Pandas-like API for working with collections of geometries.
