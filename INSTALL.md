@@ -32,12 +32,14 @@ pip install .
 # Ubuntu 14.04
 ```bash
 # install the system dependencies
+sudo add-apt-repository -y ppa:ubuntugis/ppa
 sudo apt-get update
-sudo apt-get install libgdal-dev
-sudo apt-get install libspatialindex-dev
-sudo apt-get install libblas-dev liblapack-dev libatlas-base-dev gfortran
+sudo apt-get install -y libgdal-dev
+sudo apt-get install -y libspatialindex-dev
+sudo apt-get install -y libblas-dev \
+liblapack-dev libatlas-base-dev gfortran libfreetype6-dev
 
-# create python virtual environment
+# Optional: create python virtual environment
 virtualenv venv
 source venv/bin/activate
 
@@ -45,10 +47,15 @@ source venv/bin/activate
 # (GDAL 2.0.2 doesn’t seem to be available in any PPA)
 # GDAL==1.11.2
 
+# Configure GDAL before installing
+export CPLUS_INCLUDE_PATH=/usr/include/gdal
+export C_INCLUDE_PATH=/usr/include/gdal
+
 # install python dependencies
+pip install numpy scipy
 pip install -r requirements-dev.txt
 pip install -r requirements.txt
-pip install -e .
+pip install -e /path/to/pyspatial
 
 # run the tests
 nosetests -v
