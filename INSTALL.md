@@ -1,5 +1,3 @@
-For sample scripts, see scripts/requirements-*.sh
-
 # OSX
 
 *  Scripts provided are based off of homebrew (copy and paste into terminal).  Should not install if you already have MacPorts.
