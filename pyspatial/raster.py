@@ -1056,6 +1056,7 @@ def read_catalog(dataset_catalog_file):
     grid_size = decoded.get("GridSize", None)
     index = None
     tile_structure = None
+    tms_z = None
 
     if "Index" in decoded:
         index, index_df = read_geojson(json.dumps(decoded["Index"]),
@@ -1065,9 +1066,17 @@ def read_catalog(dataset_catalog_file):
     if "Tile_structure" in decoded:
         tile_structure = decoded["Tile_structure"]
 
-    return RasterDataset(path, size[0], size[1], transform, proj,
-                         grid_size=grid_size, index=index,
-                         tile_structure=tile_structure)
+    if "TMS_z" in decoded:
+        tms_z = int(decoded["TMS_z"])
+
+    return RasterDataset(path, size[0], size[1],
+                         geo_transform = transform,
+                         proj = proj,
+                         grid_size=grid_size,
+                         index=index,
+                         tile_structure=tile_structure,
+                         tms_z = tms_z
+                         )
 
 
 def read_raster(path, band_number=1):
