@@ -22,11 +22,10 @@ HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABI
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
+
 import json
 import os
 import math
-from smart_open import ParseUri
-from boto import connect_s3
 import re
 from uuid import uuid4
 
@@ -44,7 +43,7 @@ from shapely.geometry import box
 from skimage.io import imsave
 
 from PIL import Image, ImageDraw
-import smart_open
+from pyspatial import fileutils
 
 from pyspatial import spatiallib as slib
 from pyspatial.vector import read_geojson, to_geometry, bounding_box
@@ -65,21 +64,6 @@ NP2GDAL_CONVERSION = {
 }
 
 GDAL2NP_CONVERSION = {v: k for k, v in NP2GDAL_CONVERSION.iteritems()}
-
-
-def get_path(path):
-    uri = ParseUri(path)
-
-    if uri.scheme == "file":
-        path = uri.uri_path if os.path.exists(uri.uri_path) else None
-
-    elif uri.scale == "s3":
-        conn = connect_s3()
-        bucket = conn.get_bucket(uri.bucket_id)
-        key = bucket.lookup(uri.key_id)
-        path = "/vsicurl/"+key.generate_url(60*60) if key is not None else key
-
-    return path
 
 
 def rasterize(shp, ext_outline=False, ext_fill=True, int_outline=False,
@@ -421,7 +405,7 @@ class RasterBand(RasterBase, np.ndarray):
         """
 
         if not isinstance(ds, gdal.Dataset):
-            path = get_path(ds)
+            path = fileutils.get_path(ds)
             ds = gdal.Open(path, GA_ReadOnly)
 
         band = ds.GetRasterBand(band_number)
@@ -613,7 +597,6 @@ class RasterDataset(RasterBase):
 
     proj: osr.SpatialReference
         The spa
-
     grid_size: int (default=None)
         Number of pixels for each tile. Assumes that each tile is square.
 
@@ -930,11 +913,13 @@ class RasterDataset(RasterBase):
         values are the pixel values from the raster.  the weights are the fraction
         of the pixel that is occupied by the polgon.
         """
+
         if self.proj.ExportToProj4() != vector_layer.proj.ExportToProj4():
             # Transform all vector shapes into raster projection.
             vl = vector_layer.transform(self.proj)
         else:
             vl = vector_layer
+
         # Filter out all shapes outside the raster bounds
         bbox = self.bbox()
         vl = vl.within(bbox)
@@ -1097,7 +1082,7 @@ def read_raster(path, band_number=1):
     RasterDataset
     """
 
-    path = get_path(path)
+    path = fileutils.get_path(path)
     ds = gdal.Open(path, GA_ReadOnly)
     xsize = ds.RasterXSize
     ysize = ds.RasterYSize
@@ -1125,7 +1110,7 @@ def read_band(path, band_number=1):
     RasterBand
     """
 
-    path = get_path(path)
+    path = fileutils.get_path(path)
     ds = gdal.Open(path, GA_ReadOnly)
     return RasterBand(ds, band_number=band_number)
 
@@ -1150,7 +1135,7 @@ def read_vsimem(path, band_number=1):
     RasterBand
     """
     filename = str(uuid4())
-    with smart_open.smart_open(path) as inf:
+    with fileutils.open(path) as inf:
         gdal.FileFromMemBuffer("/vsimem/%s" % filename,
                                inf.read())
 

@@ -10,7 +10,7 @@ pyspatial makes it easy to read, analyze, query, and visualize spatial data in b
 
 ## Library Highlights
   * Battle tested: we use it for our day-to-day work, and for processing all the data behind AcreValue(https://www.acrevalue.com/).  In fact, all of our PostGIS workflows have been migrated to pyspatial.
-  * Read/write both raster and vector data (including support for http/s3 sources).  Also convert to/from shapely/gdal/ogr/numpy objects seamlessly.
+  * Read/write both raster and vector data (including support for http/s3/google cloud sources).  Also convert to/from shapely/gdal/ogr/numpy objects seamlessly.
   * Fast spatial queries since it leverages GDAL and libspatialindex/RTree. For extracting vector data from a raster, the library is 60x - 100x faster than R.
   * Integration of vector/raster data structures to make interoperation seamless.
   * Pandas-like API for working with collections of geometries.
@@ -22,6 +22,9 @@ pyspatial makes it easy to read, analyze, query, and visualize spatial data in b
 
 http://nbviewer.jupyter.org/github/granularag/pyspatial/tree/master/examples/
 
+# Questions?
+
+Send us a message on google groups: pyspatial-users@googlegroups.com
 
 # Development
 
@@ -39,6 +42,7 @@ http://nbviewer.jupyter.org/github/granularag/pyspatial/tree/master/examples/
 * VectorLayer object does not support a Float64Index
 * If you encouter:
   * "TypeError: object of type 'Geometry' has no len()", most likely you have duplicate values in your index.  Make sure your index is unique.
+* On some environments, calling shape.Intersection(point) for certain shape/point combinations causes python to crash. See [this gist](https://gist.github.com/sandra-granular/c5009e189d842ddf72878c41df77e03c)
 
 # Contributors
 
@@ -49,3 +53,4 @@ http://nbviewer.jupyter.org/github/granularag/pyspatial/tree/master/examples/
 * Sandra Guteg (github: guetgs)
 * Emma Fuller (github: emfuller)
 * Alan Glennon (github: glennon)
+* James Russell (github: jamesdrussell)

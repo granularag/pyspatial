@@ -1,5 +1,3 @@
-For sample scripts, see scripts/requirements-*.sh
-
 # OSX
 
 *  Scripts provided are based off of homebrew (copy and paste into terminal).  Should not install if you already have MacPorts.
@@ -12,12 +10,58 @@ ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/
 brew install geos
 brew install spatialindex
 
-# Install GDAL 2.0
-brew install
-https://gist.githubusercontent.com/brianreavis/261cf46b44669366df9c/raw/aa7f2f2a8a511975d7d1dae9e5acf5ac203ba969/gdal.rb
+# Install latest GDAL (1.11.2)
+brew install gdal
+
+## Alternatively, install GDAL 2.0 (Still in testing)
+# brew install
+# https://gist.githubusercontent.com/brianreavis/261cf46b44669366df9c/raw/aa7f2f2a8a511975d7d1dae9e5acf5ac203ba969/gdal.rb
 ```
 
-# GDAL
+# Python
+
+```bash
+git clone https://github.com/granularag/pyspatial.git
+cd pyspatial
+pip install -r requirements.txt
+pip install .
+```
+
+# Ubuntu 14.04
+```bash
+# install the system dependencies
+sudo add-apt-repository -y ppa:ubuntugis/ppa
+sudo apt-get update
+sudo apt-get install -y libgdal-dev
+sudo apt-get install -y libspatialindex-dev
+sudo apt-get install -y libblas-dev \
+liblapack-dev libatlas-base-dev gfortran libfreetype6-dev
+
+# Optional: create python virtual environment
+virtualenv venv
+source venv/bin/activate
+
+# update GDAL version in requirements.txt to match system version 
+# (GDAL 2.0.2 doesn’t seem to be available in any PPA)
+# GDAL==1.11.2
+
+# Configure GDAL before installing
+export CPLUS_INCLUDE_PATH=/usr/include/gdal
+export C_INCLUDE_PATH=/usr/include/gdal
+
+# install python dependencies
+pip install numpy scipy
+pip install -r requirements-dev.txt
+pip install -r requirements.txt
+pip install -e /path/to/pyspatial
+
+# run the tests
+nosetests -v
+```
+
+# Appendix
+
+## Compiling GDAL from source
 
 * A good overview is provided here: https://docs.djangoproject.com/en/1.9/ref/contrib/gis/install/geolibs/
 * More detailed information can be found here: https://trac.osgeo.org/gdal/wiki/BuildHints
@@ -42,13 +86,4 @@ export PATH=$PATH:$HOME_DIR/local/bin
 export HOME_DIR=/my/home/dir
 export GDALHOME=$HOME_DIR/local/
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$USER_HOME/local/lib/
-```
-
-# Python
-
-```bash
-git clone https://github.com/granularag/pyspatial.git
-cd pyspatial
-pip install -r requirements.txt
-pip install .
 ```

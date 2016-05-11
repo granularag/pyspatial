@@ -31,7 +31,7 @@ import json
 from jinja2 import Environment, PackageLoader
 from dataset import to_dict, dumps
 from utils import projection_from_epsg
-from smart_open import smart_open
+from pyspatial import fileutils
 
 STATIC_CSS = "https://granular-labs.s3.amazonaws.com/static/css"
 STATIC_JS = "https://granular-labs.s3.amazonaws.com/static/js"
@@ -250,6 +250,6 @@ class HTMLMap(object):
     def save(self, path):
         """Save the html to a file.  Can be local or s3.  If s3, assumes that
         a .boto file exists"""
-        with smart_open(path, 'wb') as outf:
+        with fileutils.open(path, 'wb') as outf:
             self._render()
             outf.write(self.html)
