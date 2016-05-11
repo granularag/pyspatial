@@ -1010,7 +1010,7 @@ def read_raster(path, band_number=1):
     Parameters
     ----------
     path: string
-        Path to the raster file.  Can be either local or s3.
+        Path to the raster file.  Can be either local or s3/gs.
 
     band_number: int
         The band number to use
@@ -1038,7 +1038,7 @@ def read_band(path, band_number=1):
     Parameters
     ----------
     path: string
-        Path to the raster file.  Can be either local or s3.
+        Path to the raster file.  Can be either local or s3/gs.
 
     band_number: int
         The band number to use
@@ -1063,7 +1063,7 @@ def read_vsimem(path, band_number=1):
     Parameters
     ----------
     path: string
-        Path to the raster file.  Can be either local or s3.
+        Path to the raster file.  Can be either local or s3/gs.
 
     band_number: int
         The band number to use
