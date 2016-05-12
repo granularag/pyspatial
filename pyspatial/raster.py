@@ -962,7 +962,7 @@ class RasterDataset(RasterBase):
             shp = px_shps.get(id, None)
 
             if shp is None:
-                yield RasterQueryResult(id, [], np.array([]))
+                yield RasterQueryResult(id, np.array([]), [], np.array([]))
 
             else:
                 #Eagerly load tiles
@@ -977,7 +977,7 @@ class RasterDataset(RasterBase):
                 # doesn't work for small polygons
                 if vl[id].GetArea() < small_polygon_pixels * self.pixel_area:
                     values, weights = self._small_pixel_query(vl[id], shp)
-
+                    coordinates = + np.array([])
                 else:
                     # Rasterize the shape, and find list of all points.
                     mask = rasterize(shp, ext_outline=ext_outline,
