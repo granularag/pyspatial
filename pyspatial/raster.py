@@ -558,14 +558,18 @@ class RasterQueryResult:
     id : str or int
         The id of the shape in the vector layer
 
+    coordinates : np.ndarray
+        The requested raster pixel coordinates
+
     values: np.ndarray
         The values of the intersected pixels in the raster
 
     weights: np.ndarray
         The fraction of the polygon intersecting with the pixel
     """
-    def __init__(self, id, values, weights):
+    def __init__(self, id, coordinates, values, weights):
         self.id = id
+        self.coordinates = coordinates
         self.values = values
         self.weights = weights
 
@@ -748,15 +752,15 @@ class RasterDataset(RasterBase):
         if self.tms_z: # gdal2tiles TMS z
             x_grid_tmp, y_grid_tmp = self._get_grid_for_pixel(px)
 
-            x_grid_offset = x_grid_tmp / self.grid_size
-            y_grid_offset = y_grid_tmp / self.grid_size
+            x_tms_offset = x_grid_tmp / self.grid_size
+            y_tms_offset = y_grid_tmp / self.grid_size
 
-            x_grid = self.tms_x + x_grid_offset
-            y_grid = self.tms_y - y_grid_offset
+            x_grid = self.tms_x + x_tms_offset
+            y_grid = self.tms_y - y_tms_offset
 
-            x_px = px[0] - x_grid_offset
-            y_px = px[1] - y_grid_offset
-
+            x_px = px[0] - x_grid_tmp
+            y_px = px[1] - y_grid_tmp
+            # print 'raster_px', px, 'x_grid, y_grid',x_grid, y_grid, 'tile_px', x_px, y_px
         else:
             x_grid, y_grid = self._get_grid_for_pixel(px)
 
@@ -990,10 +994,10 @@ class RasterDataset(RasterBase):
                     else:
                         weights = mask[idx[:, 0], idx[:, 1]]
 
-                    pts = (idx + np.array([minx, miny])).astype(int)
-                    values = self.get_values_for_pixels(pts)
+                    coordinates = (idx + np.array([minx, miny])).astype(int)
+                    values = self.get_values_for_pixels(coordinates)
 
-                yield RasterQueryResult(id, values, weights)
+                yield RasterQueryResult(id, coordinates, values, weights)
 
             #if tiles_to_ids is None:
             #   continue
