@@ -1009,13 +1009,14 @@ class RasterDataset(RasterBase):
             #    del tiles_to_ids[e]
 
 
-def read_catalog(dataset_catalog_file):
+def read_catalog(dataset_catalog_filename_or_handle):
     """Take a catalog file and create a raster dataset
 
     Parameters
     ----------
-    dataset_catalog_file : str
-        Path to catalog file for the dataset. May be relative or absolute.
+    dataset_catalog_filename_or_handle : str or opened file handle
+        if str : Path to catalog file for the dataset. May be relative or absolute.
+
         Catalog files are in json format, and usually represent a type of data
         (e.g. CDL) and a year (e.g. 2014).
 
@@ -1029,9 +1030,11 @@ def read_catalog(dataset_catalog_file):
     raster_query_test.py : Simple examples of exercising RasterQuery on tiled
         and untiled datasets, and computing stats from results.
     vector.py : Details of VectorLayer."""
-
-    with open(dataset_catalog_file) as catalog_file:
-        decoded = json.load(catalog_file)
+    if isinstance(dataset_catalog_filename_or_handle, basestring):
+        with open(dataset_catalog_filename_or_handle) as catalog_file:
+            decoded = json.load(catalog_file)
+    else:
+        decoded = json.load(dataset_catalog_filename_or_handle)
 
     size = map(int, decoded["Size"])
     coordinate_system = str(decoded["CoordinateSystem"])
