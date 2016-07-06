@@ -33,9 +33,14 @@ pip install .
 ```bash
 # install the system dependencies
 sudo apt-get update
+sudo apt-add-repository -y ppa:ubuntugis/ppa
 sudo apt-get install libgdal-dev
 sudo apt-get install libspatialindex-dev
 sudo apt-get install libblas-dev liblapack-dev libatlas-base-dev gfortran
+
+# If the python install for GDAL fails:
+# export C_INCLUDE_PATH=/usr/include/gdal
+# export CPLUS_INCLUDE_PATH=/usr/include/gdal
 
 # create python virtual environment
 virtualenv venv
