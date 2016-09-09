@@ -26,6 +26,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import json
 import re
 from uuid import uuid4
+import os
 
 #Scipy
 import numpy as np
@@ -957,7 +958,7 @@ class RasterDataset(RasterBase):
             #    del tiles_to_ids[e]
 
 
-def read_catalog(dataset_catalog_file):
+def read_catalog(dataset_catalog_file, workdir=None):
     """Take a catalog file and create a raster dataset
 
     Parameters
@@ -989,7 +990,11 @@ def read_catalog(dataset_catalog_file):
     proj = osr.SpatialReference()
     proj.ImportFromWkt(coordinate_system)
 
-    path = decoded["Path"]
+    if workdir is None:
+        path = decoded["Path"]
+    else:
+        path = os.path.join(workdir, decoded["Path"])
+
     grid_size = decoded.get("GridSize", None)
     index = None
     tile_regex = None
