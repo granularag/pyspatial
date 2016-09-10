@@ -869,6 +869,8 @@ class RasterDataset(RasterBase):
         if self.proj.ExportToProj4() != vector_layer.proj.ExportToProj4():
             # Transform all vector shapes into raster projection.
             vl = vector_layer.transform(self.proj)
+        else:
+            vl = vector_layer
 
         # Filter out all shapes outside the raster bounds
         bbox = self.bbox()
