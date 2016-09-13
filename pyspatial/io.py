@@ -121,7 +121,7 @@ def create_zip(path):
 
 
 def uri_to_string(uri):
-    if uri.scheme == "s3":
+    if uri.scheme in ["s3", "gs"]:
         return "%s://%s/%s" % (uri.scheme, uri.bucket_id, uri.key_id)
     elif uri.scheme == "file":
         return uri.uri_path
@@ -141,16 +141,16 @@ def read_in_chunks(file_object, chunk_size=4096):
 
 def upload(local_filename, remote_path, remove_local=False):
     """Upload a local file to a remote location.  Currently,
-    only s3 is suppported"""
+    only s3/gs is suppported"""
     uri = fileutils.parse_uri(remote_path)
     if remote_path.endswith("/"):
         fname = os.path.basename(local_filename)
         if uri.scheme == "file":
             uri.uri_path += fname
-        elif uri.scheme == "s3":
+        elif uri.scheme in ["s3", "gs"]:
             uri.key_id += fname
         else:
-            raise ValueError("%s must be local or s3" % remote_path)
+            raise ValueError("%s must be local or s3/gs" % remote_path)
 
     outf = fileutils.open(remote_path, "wb")
     with open(local_filename) as inf:
@@ -174,7 +174,7 @@ def write_shapefile(vl, path, name=None, df=None,
 
     uri = fileutils.parse_uri(path)
 
-    if uri.scheme == "s3":
+    if uri.scheme in ["s3", "gs"]:
         path = mkdtemp()
     elif uri.scheme == "file":
         if os.path.exists(path):
@@ -203,7 +203,7 @@ def write_shapefile(vl, path, name=None, df=None,
             zippath = create_zip(path)
 
         fpath = path if zippath is None else zippath
-        if uri.scheme == "s3":
+        if uri.scheme in ["s3", "gs"]:
             s3path = uri_to_string(uri)
             try:
                 upload(fpath, s3path, remove_local=True)

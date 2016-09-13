@@ -211,3 +211,11 @@ class TestRasterQuery:
             failed = True
 
         assert failed
+
+    # Test if tilepaths were defined from a different working directory
+    # than the python code
+    def test_unconventional_tilepath(self):
+        dataset_catalog_file = get_path("../catalog/cdl_2014_tilepath.json")
+        rd = read_catalog(dataset_catalog_file, workdir='data/raster')
+        df = self.make_dataframe(rd.query(self.vl_one_shape))
+        assert (len(df.index) == 1)

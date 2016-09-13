@@ -1,25 +1,25 @@
 """
-Copyright (c) 2016, Granular, Inc. 
+Copyright (c) 2016, Granular, Inc.
 All rights reserved.
 License: BSD 3-Clause ("BSD New" or "BSD Simplified")
 
-Redistribution and use in source and binary forms, with or without modification, are permitted 
-provided that the following conditions are met: 
+Redistribution and use in source and binary forms, with or without modification, are permitted
+provided that the following conditions are met:
 
-  * Redistributions of source code must retain the above copyright notice, this list of conditions 
+  * Redistributions of source code must retain the above copyright notice, this list of conditions
     and the following disclaimer.
-  * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the 
-    following disclaimer in the documentation and/or other materials provided with the distribution. 
-  * Neither the name of the nor the names of its contributors may be used to endorse or promote products 
+  * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the
+    following disclaimer in the documentation and/or other materials provided with the distribution.
+  * Neither the name of the nor the names of its contributors may be used to endorse or promote products
     derived from this software without specific prior written permission.
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS 
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
 OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
- AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL BE LIABLE FOR ANY DIRECT, 
-INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, 
+ AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL BE LIABLE FOR ANY DIRECT,
+INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
@@ -64,7 +64,7 @@ NP2GDAL_CONVERSION = {
 }
 
 GDAL2NP_CONVERSION = {v: k for k, v in NP2GDAL_CONVERSION.iteritems()}
-
+TILE_REGEX = re.compile('([0-9]+)_([0-9]+)\.tif')
 
 def rasterize(shp, ext_outline=False, ext_fill=True, int_outline=False,
               int_fill=False, scale_factor=4):
@@ -670,7 +670,7 @@ class RasterDataset(RasterBase):
     * Add support for color tables and raster attributes
     """
 
-    def __init__(self, path_or_ds, xsize, ysize, geo_transform, proj,
+    def __init__(self, path_or_ds, xsize, ysize, geo_transform, proj, tile_regex=TILE_REGEX,
                  grid_size=None, index=None, tile_structure=None, tms_z=None):
         ds = None
 
@@ -692,6 +692,9 @@ class RasterDataset(RasterBase):
 
         self.raster_arrays = {}
         self.shapes_in_tiles = {}
+        self.tile_regex = tile_regex
+        self.index = index
+        self.grid_size = grid_size
         self.dtype = None
 
         # Initialize the base class with coordinate information.
@@ -700,7 +703,7 @@ class RasterDataset(RasterBase):
         if tms_z:
             self.tms_z = tms_z
 
-            # get the tile TMS {x} {y} of the center of the upper left tile (0,0) 
+            # get the tile TMS {x} {y} of the center of the upper left tile (0,0)
             gt = self.GetGeoTransform()
             upper_left_tile_center_x = int(math.floor(self.grid_size / 2))
             upper_left_tile_center_y = int(math.floor(self.grid_size / 2))
@@ -833,7 +836,7 @@ class RasterDataset(RasterBase):
         Parameters
         ----------
         filename : str
-            Tile filename. We assume filename is in format given by argument tile_structure, 
+            Tile filename. We assume filename is in format given by argument tile_structure,
             which is by default "%d_%d.tif" :
             'arbitrary_path/{x_grid}_{y_grid}.tif'
             e.g. 'data/tiled/2500_2250.tif'
@@ -1009,7 +1012,7 @@ class RasterDataset(RasterBase):
             #    del tiles_to_ids[e]
 
 
-def read_catalog(dataset_catalog_filename_or_handle):
+def read_catalog(dataset_catalog_filename_or_handle, workdir=None):
     """Take a catalog file and create a raster dataset
 
     Parameters
@@ -1044,7 +1047,11 @@ def read_catalog(dataset_catalog_filename_or_handle):
     proj = osr.SpatialReference()
     proj.ImportFromWkt(coordinate_system)
 
-    path = decoded["Path"]
+    if workdir is None:
+        path = decoded["Path"]
+    else:
+        path = os.path.join(workdir, decoded["Path"])
+
     grid_size = decoded.get("GridSize", None)
     index = None
     tile_structure = None
@@ -1078,7 +1085,7 @@ def read_raster(path, band_number=1):
     Parameters
     ----------
     path: string
-        Path to the raster file.  Can be either local or s3.
+        Path to the raster file.  Can be either local or s3/gs.
 
     band_number: int
         The band number to use
@@ -1106,7 +1113,7 @@ def read_band(path, band_number=1):
     Parameters
     ----------
     path: string
-        Path to the raster file.  Can be either local or s3.
+        Path to the raster file.  Can be either local or s3/gs.
 
     band_number: int
         The band number to use
@@ -1131,7 +1138,7 @@ def read_vsimem(path, band_number=1):
     Parameters
     ----------
     path: string
-        Path to the raster file.  Can be either local or s3.
+        Path to the raster file.  Can be either local or s3/gs.
 
     band_number: int
         The band number to use

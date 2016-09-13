@@ -1128,7 +1128,7 @@ class VectorLayer(pd.Series):
         Parameters
         ----------
         path: str
-             Path to where you want to save the file. Can be local or s3.
+             Path to where you want to save the file. Can be local or s3/gs.
 
         df: pandas.DataFrame (default=None)
             Attach the attributes to the vector layer.  Similar to to_dict.
@@ -1140,7 +1140,7 @@ def fetch_geojson(path):
     url = urlparse(path)
     if "http" in url.scheme:
         geojson = requests.get(path).text
-    elif "s3" in url.scheme or url.scheme == "" or url.scheme == "file":
+    elif "s3" in url.scheme or url.scheme == "" or url.scheme == "file" or url.scheme == "gs":
         with fileutils.open(path) as inf:
             geojson = inf.read()
     else:
