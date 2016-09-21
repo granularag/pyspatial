@@ -1,9 +1,11 @@
 from smart_open import smart_open, ParseUri
-from urlparse import urlparse
+
+from pyspatial.py3 import urlparse
 import boto
 from boto import connect_s3
 import os
 import six
+
 
 def parse_uri(uri):
     parsed_uri = urlparse(uri)
@@ -16,6 +18,7 @@ def parse_uri(uri):
         return tmp_uri
     else:
         raise NotImplementedError("unknown URI scheme %r in %r" % (parsed_uri.scheme, uri))
+
 
 def get_path(path):
     uri = parse_uri(path)
@@ -36,6 +39,7 @@ def get_path(path):
         path = "/vsicurl/"+key.generate_url(60*60) if key is not None else key
 
     return path
+
 
 def open(path, mode="rb", **kw):
     uri = urlparse(path)

@@ -28,7 +28,7 @@ import os
 import math
 import re
 from uuid import uuid4
-
+from six import string_types
 #Scipy
 import numpy as np
 from skimage.transform import downscale_local_mean
@@ -52,19 +52,20 @@ from pyspatial.utils import projection_from_epsg
 from pyspatial import globalmaptiles
 
 NP2GDAL_CONVERSION = {
-  "uint8": 1,
-  "uint16": 2,
-  "int16": 3,
-  "uint32": 4,
-  "int32": 5,
-  "float32": 6,
-  "float64": 7,
-  "complex64": 10,
-  "complex128": 11,
+    "uint8": 1,
+    "uint16": 2,
+    "int16": 3,
+    "uint32": 4,
+    "int32": 5,
+    "float32": 6,
+    "float64": 7,
+    "complex64": 10,
+    "complex128": 11,
 }
 
-GDAL2NP_CONVERSION = {v: k for k, v in NP2GDAL_CONVERSION.iteritems()}
+GDAL2NP_CONVERSION = {v: k for k, v in NP2GDAL_CONVERSION.items()}
 TILE_REGEX = re.compile('([0-9]+)_([0-9]+)\.tif')
+
 
 def rasterize(shp, ext_outline=False, ext_fill=True, int_outline=False,
               int_fill=False, scale_factor=4):
@@ -861,7 +862,7 @@ class RasterDataset(RasterBase):
 
         grid = self.to_geometry_grid(*shp_px.bounds)
         areas = {}
-        for i, b in grid.iteritems():
+        for i, b in grid.items():
 
             if b.Intersects(to_geometry(shp, proj=self.proj)):
                 diff = b.Intersection(to_geometry(shp, proj=self.proj))
@@ -942,11 +943,11 @@ class RasterDataset(RasterBase):
         # particular tile have been removed.
         #if self.index is not None:
         #    res = {self._key_from_tile_filename(id): set(vl.intersects(f).ids)
-        #           for id, f in self.index.iteritems()}
+        #           for id, f in self.index.items()}
 
-        #    tiles_to_ids = {k: v for k, v in res.iteritems() if len(v) > 0}
+        #    tiles_to_ids = {k: v for k, v in res.items() if len(v) > 0}
         #    ids_to_tiles = defaultdict(set)
-        #    for tile, shp_ids in tiles_to_ids.iteritems():
+        #    for tile, shp_ids in tiles_to_ids.items():
         #        for id in shp_ids:
         #            ids_to_tiles[id].add(tile)
 
@@ -1006,7 +1007,7 @@ class RasterDataset(RasterBase):
             #   continue
 
             #Remove raster bands that are empty
-            #empty = [k for k, v in tiles_to_ids.iteritems() if len(v) == 0]
+            #empty = [k for k, v in tiles_to_ids.items() if len(v) == 0]
             #for e in empty:
             #    del self.raster_arrays[e]
             #    del tiles_to_ids[e]
@@ -1033,13 +1034,13 @@ def read_catalog(dataset_catalog_filename_or_handle, workdir=None):
     raster_query_test.py : Simple examples of exercising RasterQuery on tiled
         and untiled datasets, and computing stats from results.
     vector.py : Details of VectorLayer."""
-    if isinstance(dataset_catalog_filename_or_handle, basestring):
+    if isinstance(dataset_catalog_filename_or_handle, string_types):
         with open(dataset_catalog_filename_or_handle) as catalog_file:
             decoded = json.load(catalog_file)
     else:
         decoded = json.load(dataset_catalog_filename_or_handle)
 
-    size = map(int, decoded["Size"])
+    size = [int(x) for x in decoded["Size"]]
     coordinate_system = str(decoded["CoordinateSystem"])
     transform = decoded["GeoTransform"]
 
