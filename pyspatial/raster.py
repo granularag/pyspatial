@@ -623,7 +623,7 @@ class RasterDataset(RasterBase):
         Number of pixels in width or height of each grid tile. If set to None,
         that indicates this is an untiled raster.
 
-    raster_arrays : RasterBand, or
+    raster_bands : RasterBand, or
                     dict of (list of int): RasterBand
         Dictionary storing raster arrays that have been read from disk.
         If untiled, this is set at initialization to the whole raster. If
@@ -659,9 +659,9 @@ class RasterDataset(RasterBase):
     pixel array. We store each tile in a 2D array in a dictionary keyed by
     the tile position relative to the overall raster position in pixel space.
     For example, a pixel at (118, 243) in a tiled dataset with grid size = 100
-    would be stored in raster_arrays[(100, 200)][18][43]. As a memory
+    would be stored in raster_bands[(100, 200)][18][43]. As a memory
     utilization and performance enhancement, we lazily read tiles from disk
-    when they are first needed and store them in raster_arrays{} (for the
+    when they are first needed and store them in raster_bands{} (for the
     lifetime of the RasterDataset object). If memory turns out to be a
     problem, it might make sense to store these in a LRU cache instead.
 
@@ -696,7 +696,7 @@ class RasterDataset(RasterBase):
         else:
             self.tile_structure = "%d_%d.tif"
 
-        self.raster_arrays = {}
+        self.raster_bands = {}
         self.shapes_in_tiles = {}
         self.tile_regex = tile_regex
         self.index = index
@@ -729,15 +729,15 @@ class RasterDataset(RasterBase):
         # Read raster file now if this is an untiled data set.
         if self.grid_size is None:
             if ds is None:
-                self.raster_arrays = read_vsimem(self.path)
+                self.raster_bands = read_vsimem(self.path)
             else:
                 if self.band_count == 1:
-                    self.raster_arrays = RasterBand(ds)
-                    self.dtype = self.raster_arrays.dtype
+                    self.raster_bands = RasterBand(ds)
+                    self.dtype = self.raster_bands.dtype
                 else:
-                    self.raster_arrays = [RasterBand(ds, band_number=(i+1))
-                                          for i in range(self.band_count)]
-                    self.dtype = [r.dtype for r in self.raster_arrays]
+                    self.raster_bands = [RasterBand(ds, band_number=(i+1))
+                                         for i in range(self.band_count)]
+                    self.dtype = [r.dtype for r in self.raster_bands]
 
         if self.tile_structure:
             self.tile_regex = self.tile_structure.replace('%d','([0-9]+)').replace('.','\.')
@@ -763,7 +763,7 @@ class RasterDataset(RasterBase):
 
         """
         # Compute which grid tile to read
-        if self.tms_z: # gdal2tiles TMS z
+        if self.tms_z:  # gdal2tiles TMS z
             x_grid_tmp, y_grid_tmp = self._get_grid_for_pixel(px)
 
             x_tms_offset = x_grid_tmp / self.grid_size
@@ -784,15 +784,15 @@ class RasterDataset(RasterBase):
             y_px = px[1] - y_grid
 
         # If we haven't already read this grid tile into memory, do so now,
-        # and store it in raster_arrays for future queries to access.
-        if (x_grid, y_grid) not in self.raster_arrays:
+        # and store it in raster_bands for future queries to access.
+        if (x_grid, y_grid) not in self.raster_bands:
             filename = self.path + self.tile_structure % (x_grid, y_grid)
-            self.raster_arrays[(x_grid, y_grid)] = read_vsimem(filename)
+            self.raster_bands[(x_grid, y_grid)] = read_vsimem(filename)
             if self.dtype is None:
-                self.dtype = self.raster_arrays[(x_grid, y_grid)].dtype
+                self.dtype = self.raster_bands[(x_grid, y_grid)].dtype
 
         # Look up the grid tile for this pixel.
-        raster = self.raster_arrays[(x_grid, y_grid)]
+        raster = self.raster_bands[(x_grid, y_grid)]
 
         if raster.ndim == 2:  # grayscale
             return raster[y_px][x_px]
@@ -801,7 +801,7 @@ class RasterDataset(RasterBase):
 
     def _get_grid_for_pixel(self, px):
         """Compute the min_x, min_y of the tile that contains pixel,
-        which can also be used for looking up the tile in raster_arrays.
+        which can also be used for looking up the tile in raster_bands.
 
         Parameters
         ----------
@@ -835,10 +835,10 @@ class RasterDataset(RasterBase):
         # Untiled case: Use the 1-file raster array we read in at
         # initialization.
         if self.grid_size is None:
-            if isinstance(self.raster_arrays, list):
-                return [r[pxs[:, 1], pxs[:, 0]] for r in self.raster_arrays]
+            if isinstance(self.raster_bands, list):
+                return [r[pxs[:, 1], pxs[:, 0]] for r in self.raster_bands]
             else:
-                return self.raster_arrays[pxs[:, 1], pxs[:, 0]]
+                return self.raster_bands[pxs[:, 1], pxs[:, 0]]
         # Tiled case: Compute the grid tile to read, and the x,y offset in
         # that tile.
         else:
@@ -952,7 +952,7 @@ class RasterDataset(RasterBase):
         # Optimization to minimize memory usage if the RasterDataset contains
         # an index.  This will sort by the upper left corners of all the shapes
         # and process one shape at a time.  It will remove the corresponding
-        # entries in self.raster_arrays once all references for shapes in a
+        # entries in self.raster_bands once all references for shapes in a
         # particular tile have been removed.
         #if self.index is not None:
         #    res = {self._key_from_tile_filename(id): set(vl.intersects(f).ids)
@@ -985,9 +985,9 @@ class RasterDataset(RasterBase):
                 #Eagerly load tiles
                 #if ids_to_tiles is not None:
                 #    for key in list(ids_to_tiles[id]):
-                #        if key not in self.raster_arrays:
+                #        if key not in self.raster_bands:
                 #            filename = self.path + "%d_%d.tif" % key
-                #            self.raster_arrays[key] = RasterBand(filename)
+                #            self.raster_bands[key] = RasterBand(filename)
                 #        tiles_to_ids[key].remove(id)
 
                 # Check for small polygon since rasterizing a polygon
@@ -1022,7 +1022,7 @@ class RasterDataset(RasterBase):
             #Remove raster bands that are empty
             #empty = [k for k, v in tiles_to_ids.items() if len(v) == 0]
             #for e in empty:
-            #    del self.raster_arrays[e]
+            #    del self.raster_bands[e]
             #    del tiles_to_ids[e]
 
 
@@ -1083,12 +1083,12 @@ def read_catalog(dataset_catalog_filename_or_handle, workdir=None):
         tms_z = int(decoded["TMS_z"])
 
     return RasterDataset(path, size[0], size[1],
-                         geo_transform = transform,
-                         proj = proj,
+                         geo_transform=transform,
+                         proj=proj,
                          grid_size=grid_size,
                          index=index,
                          tile_structure=tile_structure,
-                         tms_z = tms_z
+                         tms_z=tms_z
                          )
 
 

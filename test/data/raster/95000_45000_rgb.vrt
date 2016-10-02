@@ -1,0 +1,49 @@
+<VRTDataset rasterXSize="5000" rasterYSize="5000">
+  <SRS>PROJCS["Albers_Conical_Equal_Area",GEOGCS["GCS_North_American_1983",DATUM["North_American_Datum_1983",SPHEROID["GRS_1980",6378137,298.257222101]],PRIMEM["Greenwich",0],UNIT["Degree",0.017453292519943295]],PROJECTION["Albers_Conic_Equal_Area"],PARAMETER["standard_parallel_1",29.5],PARAMETER["standard_parallel_2",45.5],PARAMETER["latitude_of_center",23],PARAMETER["longitude_of_center",-96],PARAMETER["false_easting",0],PARAMETER["false_northing",0],UNIT["meters",1]]</SRS>
+  <GeoTransform>  4.9390500000000000e+05,  3.0000000000000000e+01,  0.0000000000000000e+00,  1.8226050000000000e+06,  0.0000000000000000e+00, -3.0000000000000000e+01</GeoTransform>
+  <Metadata />
+  <VRTRasterBand dataType="Byte" band="1">
+    <ColorInterp>Red</ColorInterp>
+    <ComplexSource>
+      <SourceFilename relativeToVRT="1">95000_45000.tif</SourceFilename>
+      <SourceBand>1</SourceBand>
+      <SourceProperties RasterXSize="5000" RasterYSize="5000" DataType="Byte" BlockXSize="64" BlockYSize="64" />
+      <SrcRect xOff="0" yOff="0" xSize="5000" ySize="5000" />
+      <DstRect xOff="0" yOff="0" xSize="5000" ySize="5000" />
+      <ColorTableComponent>1</ColorTableComponent>
+    </ComplexSource>
+  </VRTRasterBand>
+  <VRTRasterBand dataType="Byte" band="2">
+    <ColorInterp>Green</ColorInterp>
+    <ComplexSource>
+      <SourceFilename relativeToVRT="1">95000_45000.tif</SourceFilename>
+      <SourceBand>1</SourceBand>
+      <SourceProperties RasterXSize="5000" RasterYSize="5000" DataType="Byte" BlockXSize="64" BlockYSize="64" />
+      <SrcRect xOff="0" yOff="0" xSize="5000" ySize="5000" />
+      <DstRect xOff="0" yOff="0" xSize="5000" ySize="5000" />
+      <ColorTableComponent>2</ColorTableComponent>
+    </ComplexSource>
+  </VRTRasterBand>
+  <VRTRasterBand dataType="Byte" band="3">
+    <ColorInterp>Blue</ColorInterp>
+    <ComplexSource>
+      <SourceFilename relativeToVRT="1">95000_45000.tif</SourceFilename>
+      <SourceBand>1</SourceBand>
+      <SourceProperties RasterXSize="5000" RasterYSize="5000" DataType="Byte" BlockXSize="64" BlockYSize="64" />
+      <SrcRect xOff="0" yOff="0" xSize="5000" ySize="5000" />
+      <DstRect xOff="0" yOff="0" xSize="5000" ySize="5000" />
+      <ColorTableComponent>3</ColorTableComponent>
+    </ComplexSource>
+  </VRTRasterBand>
+  <VRTRasterBand dataType="Byte" band="4">
+    <ColorInterp>Alpha</ColorInterp>
+    <ComplexSource>
+      <SourceFilename relativeToVRT="1">95000_45000.tif</SourceFilename>
+      <SourceBand>1</SourceBand>
+      <SourceProperties RasterXSize="5000" RasterYSize="5000" DataType="Byte" BlockXSize="64" BlockYSize="64" />
+      <SrcRect xOff="0" yOff="0" xSize="5000" ySize="5000" />
+      <DstRect xOff="0" yOff="0" xSize="5000" ySize="5000" />
+      <ColorTableComponent>4</ColorTableComponent>
+    </ComplexSource>
+  </VRTRasterBand>
+</VRTDataset>
