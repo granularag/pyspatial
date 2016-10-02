@@ -417,7 +417,8 @@ class RasterBand(RasterBase, np.ndarray):
 
         gdal_type = band.DataType
         dtype = np.dtype(GDAL2NP_CONVERSION[gdal_type])
-        self = np.asarray(ds.ReadAsArray().astype(dtype)).view(cls)
+        self = np.asarray(band.ReadAsArray().astype(dtype)).view(cls)
+
         self.gdal_type = gdal_type
         proj = SpatialReference()
         proj.ImportFromWkt(ds.GetProjection())
@@ -671,15 +672,19 @@ class RasterDataset(RasterBase):
     * Add support for color tables and raster attributes
     """
 
-    def __init__(self, path_or_ds, xsize, ysize, geo_transform, proj, tile_regex=TILE_REGEX,
-                 grid_size=None, index=None, tile_structure=None, tms_z=None):
+    def __init__(self, path_or_ds, xsize, ysize, geo_transform, proj, bands=None,
+                 tile_regex=TILE_REGEX, grid_size=None, index=None,
+                 tile_structure=None, tms_z=None):
+
         ds = None
+        self.band_count = None
 
         if not isinstance(path_or_ds, gdal.Dataset):
             path = path_or_ds
         else:
             ds = path_or_ds
             path = ds.GetDescription()
+            self.band_count = ds.RasterCount
 
         self.path = path
         self.proj = proj
@@ -726,8 +731,13 @@ class RasterDataset(RasterBase):
             if ds is None:
                 self.raster_arrays = read_vsimem(self.path)
             else:
-                self.raster_arrays = RasterBand(ds)
-            self.dtype = self.raster_arrays.dtype
+                if self.band_count == 1:
+                    self.raster_arrays = RasterBand(ds)
+                    self.dtype = self.raster_arrays.dtype
+                else:
+                    self.raster_arrays = [RasterBand(ds, band_number=(i+1))
+                                          for i in range(self.band_count)]
+                    self.dtype = [r.dtype for r in self.raster_arrays]
 
         if self.tile_structure:
             self.tile_regex = self.tile_structure.replace('%d','([0-9]+)').replace('.','\.')
@@ -777,16 +787,16 @@ class RasterDataset(RasterBase):
         # and store it in raster_arrays for future queries to access.
         if (x_grid, y_grid) not in self.raster_arrays:
             filename = self.path + self.tile_structure % (x_grid, y_grid)
-            self.raster_arrays[(x_grid, y_grid)] = read_vsimem(filename) # TODO?: band_number argument doesn't change anything, all the bands are read
+            self.raster_arrays[(x_grid, y_grid)] = read_vsimem(filename)
             if self.dtype is None:
                 self.dtype = self.raster_arrays[(x_grid, y_grid)].dtype
 
         # Look up the grid tile for this pixel.
         raster = self.raster_arrays[(x_grid, y_grid)]
 
-        if raster.ndim == 2: # grayscale
+        if raster.ndim == 2:  # grayscale
             return raster[y_px][x_px]
-        elif raster.ndim == 3: # RGBA+
+        elif raster.ndim == 3:  # RGBA+
             return raster[:, y_px, x_px] # GDAL style dimensions order
 
     def _get_grid_for_pixel(self, px):
@@ -825,7 +835,10 @@ class RasterDataset(RasterBase):
         # Untiled case: Use the 1-file raster array we read in at
         # initialization.
         if self.grid_size is None:
-            return self.raster_arrays[pxs[:, 1], pxs[:, 0]]
+            if isinstance(self.raster_arrays, list):
+                return [r[pxs[:, 1], pxs[:, 0]] for r in self.raster_arrays]
+            else:
+                return self.raster_arrays[pxs[:, 1], pxs[:, 0]]
         # Tiled case: Compute the grid tile to read, and the x,y offset in
         # that tile.
         else:
