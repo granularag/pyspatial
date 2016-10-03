@@ -1,9 +1,11 @@
 from smart_open import smart_open, ParseUri
-from urlparse import urlparse
+
+from pyspatial.py3 import urlparse
 import boto
 from boto import connect_s3
 import os
 import six
+
 
 def parse_uri(uri):
     parsed_uri = urlparse(uri)
@@ -17,7 +19,13 @@ def parse_uri(uri):
     else:
         raise NotImplementedError("unknown URI scheme %r in %r" % (parsed_uri.scheme, uri))
 
+
 def get_path(path):
+
+    prefix = ""
+    if path.endswith(".gz") and ".tar.gz" not in path:
+        prefix = "/vsigzip/"
+
     uri = parse_uri(path)
 
     if uri.scheme == "file":
@@ -27,15 +35,22 @@ def get_path(path):
         conn = connect_s3()
         bucket = conn.get_bucket(uri.bucket_id)
         key = bucket.lookup(uri.key_id)
-        path = "/vsicurl/"+key.generate_url(60*60) if key is not None else key
+        if prefix == "":
+            prefix = "/"
+        prefix += os.path.join(prefix, "vsicurl")
+        path = key.generate_url(60*60) if key is not None else key
 
     elif uri.scheme == 'gs':
         storage_uri = boto.storage_uri(uri.bucket_id, uri.scheme)
         bucket = storage_uri.get_bucket(uri.bucket_id)
         key = bucket.lookup(uri.key_id)
-        path = "/vsicurl/"+key.generate_url(60*60) if key is not None else key
+        if prefix == "":
+            prefix = "/"
+        prefix += os.path.join(prefix, "vsicurl/")
+        path = key.generate_url(60*60) if key is not None else key
 
-    return path
+    return prefix+path
+
 
 def open(path, mode="rb", **kw):
     uri = urlparse(path)
@@ -60,6 +75,7 @@ def open(path, mode="rb", **kw):
             raise NotImplementedError("file mode %s not supported for %r scheme", mode, uri.scheme)
     else:
         raise NotImplementedError("scheme %r is not supported", uri.scheme)
+
 
 class GSOpenRead(object):
     """

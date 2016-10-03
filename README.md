@@ -4,6 +4,7 @@ pyspatial is python package to provide data structures on top of gdal/ogr. Its c
 
 * VectorLayer: a collection of geometries with pandas like manipulation.  Each geometry is an osgeo.ogr.Geometry object. For an object reference [see this link](http://gdal.org/python/).
 * RasterDataset: an abstraction of a spatial raster (both tiled on untiled) to support querying of pixels that intersect with shapes.
+* TiledWebRaster: an abstraction of a tiled spatial raster typically used for visualization on the web (e.g. openlayers or google maps) (Still in testing)
 * RasterBand: a numpy array representation of a raster with spatial metadata (in memory only, no tiled support).
 
 pyspatial makes it easy to read, analyze, query, and visualize spatial data in both vector and raster form. It brings the familiarity of pandas to working with vector data, and provides querying capability similar to PostGIS for both vector and raster data.  Since it uses GDAL for much of the computations, the performance is quite good.  Based on the authors' experience, the performance has been significantly better than PostGIS, and orders of magnitude faster than similar libraries in R.
@@ -32,7 +33,6 @@ Send us a message on google groups: [pyspatial-users@googlegroups.com](https://g
 * Tests: nosetests -v
 
 ## TODOs
-* Add support for tiles created by gdal2tiles in RasterDataset. It's just a matter of modifying `RasterDataset._get_value_for_pixel` Currently it assumes format of `self.path + "%d_%d.tif"`.  Where the %d are `(x, y)` coordinates of the upper left corner of the raster tile in pixel space.  This is obviously far to specific.  We could instead pass this as a function which takes a pixel of `[x,y]` (in pixel coordinates) and returns the value from the tiled raster at this pixel.  Alternatively, we could have an argument called "tile_format" or something  to raster dataset that would just dispatch to the correct functions. This would also involve adding a band_number argument and passing it to any calls to read_vsimem in RasterDataset.
 * Adjust timed tests.  Currently calibrated to a early Macbook Pro 15" with Core i7.  These tend to fail on many other machines.  Should either remove the @timed decorators, or figure out what a reasonable time is for the tests.
 
 # Known Issues

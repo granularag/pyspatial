@@ -29,12 +29,11 @@ Parts of this file were adapted from the geopandas project
 under the BSD license.
 """
 
-
-from urlparse import urlparse
+from pyspatial.py3 import urlparse
 
 import requests
 from pyspatial import fileutils
-
+from six import string_types
 from numpy import ndarray
 import pandas as pd
 from rtree import index
@@ -45,7 +44,7 @@ from shapely.geometry import shape
 from shapely import wkb
 from shapely.geometry import box
 from shapely import ops
-import pyspatial.utils as ut
+from pyspatial import utils as ut
 from pyspatial.spatiallib import to_utm
 from pyspatial.io import get_ogr_datasource, write_shapefile
 
@@ -107,7 +106,7 @@ def to_geometry(shp, copy=False, proj=None):
         raise ValueError("Unable to convert to ogr.Geometry object")
 
     # Check projection
-    if isinstance(proj, str) or isinstance(proj, unicode):
+    if isinstance(proj, string_types):
         target_proj = SpatialReference()
         target_proj.ImportFromProj4(proj)
 
@@ -785,7 +784,7 @@ class VectorLayer(pd.Series):
         -------
         pandas.Series(as_geometry=False) or VectorLayer(as_geometry=True)
         """
-        data = map(f, self.features)
+        data = list(map(f, self.features))
         if not as_geometry:
             return pd.Series(data, index=self.index)
         else:
@@ -944,10 +943,13 @@ class VectorLayer(pd.Series):
         return to_geometry(box(xmin, ymin, xmax, ymax), proj=self.proj)
 
     def _gen_index(self):
-        ix = xrange(len(self.features))
+        ix = range(len(self.features))
         for i, id, geom in zip(ix, self.index, self.features):
             xmin, xmax, ymin, ymax = geom.GetEnvelope()
             yield (i, (xmin, ymin, xmax, ymax), id)
+
+    def items(self):
+        return self.iteritems()
 
     def build_sindex(self):
         if self._sindex is None:
@@ -1152,7 +1154,7 @@ def read_datasource(ds, layer=0, index=None):
     dslayer = ds.GetLayerByIndex(layer)
 
     features = [dslayer.GetFeature(i) for i in
-                xrange(dslayer.GetFeatureCount())]
+                range(dslayer.GetFeatureCount())]
 
     if index is None:
         ids = pd.Index([f.GetFID() for f in features])
@@ -1229,20 +1231,20 @@ def read_geojson(path_or_str, index=None):
 
     if index is None:
         try:
-            ids = map(lambda x: x["id"], feats)
+            ids = [x["id"] for x in feats]
         except KeyError:
             ids = range(len(feats))
 
         name = "index"
-    elif isinstance(index, str) or isinstance(index, unicode):
-        ids = map(lambda x: x["properties"][index], feats)
+    elif isinstance(index, string_types):
+        ids = [x["properties"][index] for x in feats]
         name = index
     else:
         raise ValueError("Unable to create index.")
 
     proj = ut.projection_from_epsg()
-    props = pd.DataFrame(map(lambda x: x["properties"], feats), index=ids)
-    geoms = pd.Series(map(lambda x: shape(x["geometry"]), feats), index=ids) \
+    props = pd.DataFrame([x["properties"] for x in feats], index=ids)
+    geoms = pd.Series([shape(x["geometry"]) for x in feats], index=ids) \
               .map(lambda x: to_geometry(x, proj=proj))
 
     props.index.name = name

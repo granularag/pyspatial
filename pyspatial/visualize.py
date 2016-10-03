@@ -1,25 +1,25 @@
 """
-Copyright (c) 2016, Granular, Inc. 
+Copyright (c) 2016, Granular, Inc.
 All rights reserved.
 License: BSD 3-Clause ("BSD New" or "BSD Simplified")
 
-Redistribution and use in source and binary forms, with or without modification, are permitted 
-provided that the following conditions are met: 
+Redistribution and use in source and binary forms, with or without modification, are permitted
+provided that the following conditions are met:
 
-  * Redistributions of source code must retain the above copyright notice, this list of conditions 
+  * Redistributions of source code must retain the above copyright notice, this list of conditions
     and the following disclaimer.
-  * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the 
-    following disclaimer in the documentation and/or other materials provided with the distribution. 
-  * Neither the name of the nor the names of its contributors may be used to endorse or promote products 
+  * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the
+    following disclaimer in the documentation and/or other materials provided with the distribution.
+  * Neither the name of the nor the names of its contributors may be used to endorse or promote products
     derived from this software without specific prior written permission.
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS 
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
 OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
- AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL BE LIABLE FOR ANY DIRECT, 
-INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, 
+ AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL BE LIABLE FOR ANY DIRECT,
+INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
@@ -29,8 +29,8 @@ from shapely.geometry.base import BaseGeometry
 import json
 
 from jinja2 import Environment, PackageLoader
-from dataset import to_dict, dumps
-from utils import projection_from_epsg
+from pyspatial.dataset import to_dict, dumps
+from pyspatial.utils import projection_from_epsg
 from pyspatial import fileutils
 
 STATIC_CSS = "https://granular-labs.s3.amazonaws.com/static/css"
@@ -78,7 +78,7 @@ def get_geojson_dict(geo_data):
     elif isinstance(geo_data, pd.Series):
         g0 = geo_data[0]
         if isinstance(g0, Geometry) or isinstance(g0, BaseGeometry):
-            features = [to_feature(s, i) for i, s in geo_data.iteritems()]
+            features = [to_feature(s, i) for i, s in geo_data.items()]
         else:
             raise ValueError(msg)
 
@@ -116,7 +116,7 @@ def get_latlngs(geo_data):
         return []
 
     elif hasattr(geo_data, "__iter__"):
-        return [to_latlng(s) for i, s in geo_data.iteritems()]
+        return [to_latlng(s) for i, s in geo_data.items()]
 
     else:
         raise ValueError("Invalid geo_data")
@@ -204,7 +204,7 @@ class HTMLMap(object):
         if style is not None:
             _style.update(style)
 
-        css = ";".join(["%s:%s" % (k, v) for k, v in _style.iteritems()])
+        css = ";".join(["%s:%s" % (k, v) for k, v in _style.items()])
         style = "style=\"{css}\"".format(css=css)
 
     def choropleth(self, column=None, levels=6, palette="Reds"):
