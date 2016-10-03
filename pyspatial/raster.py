@@ -1079,6 +1079,7 @@ class TiledWebRaster(RasterDataset):
         try:
             return [r[y_px][x_px] for r in raster]
         except:
+            # TODO: get a default nan value for each dtype
             return [0 for i in raster]
 
     def get_values_for_pixels(self, pxs):
