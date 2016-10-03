@@ -672,7 +672,7 @@ class RasterDataset(RasterBase):
     * Add support for color tables and raster attributes
     """
 
-    def __init__(self, path_or_ds, xsize, ysize, geo_transform, proj, bands=None,
+    def __init__(self, path_or_ds, xsize, ysize, geo_transform, proj,
                  tile_regex=TILE_REGEX, grid_size=None, index=None,
                  tile_structure=None, tms_z=None):
 
@@ -705,26 +705,6 @@ class RasterDataset(RasterBase):
 
         # Initialize the base class with coordinate information.
         RasterBase.__init__(self, xsize, ysize, geo_transform, proj)
-
-        if tms_z:
-            self.tms_z = tms_z
-
-            # get the tile TMS {x} {y} of the center of the upper left tile (0,0)
-            gt = self.GetGeoTransform()
-            upper_left_tile_center_x = int(math.floor(self.grid_size / 2))
-            upper_left_tile_center_y = int(math.floor(self.grid_size / 2))
-            upper_left_tile_center_Lon = gt[0] + upper_left_tile_center_x * gt[1] + upper_left_tile_center_y * gt[2]
-            upper_left_tile_center_Lat = gt[3] + upper_left_tile_center_y * gt[4] + upper_left_tile_center_x * gt[5]
-
-            mercator = globalmaptiles.GlobalMercator()
-            # Converts given lat/lon in WGS84 Datum to XY in Spherical Mercator EPSG:900913/3857
-            mx, my = mercator.LatLonToMeters(upper_left_tile_center_Lat, upper_left_tile_center_Lon)
-            # Returns tile for given Sperical mercator coordinates
-            self.tms_x, self.tms_y = mercator.MetersToTile(mx,my, self.tms_z)
-        else:
-            self.tms_z = None
-            self.tms_x = None
-            self.tms_y = None
 
         # Read raster file now if this is an untiled data set.
         if self.grid_size is None:
