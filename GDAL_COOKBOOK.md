@@ -4,8 +4,9 @@ $ gdal_translate -of vrt -expand rgba 95000_45000.tif 95000_45000_rgb.vrt
 ```
 
 # Creating tiles for viewing on the web
+  * The -z is the zoom levels to generate
 ```bash
-gdal2tiles.py 95000_45000_rgb.vrt /tmp/95000_45000_rgb
+gdal2tiles.py -z 7-13 95000_45000_rgb.vrt /tmp/95000_45000_rgb
 ```
 
 # Error handling GDAL

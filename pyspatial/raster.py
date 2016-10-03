@@ -742,26 +742,12 @@ class RasterDataset(RasterBase):
             type.
 
         """
-        # Compute which grid tile to read
-        if self.tms_z:  # gdal2tiles TMS z
-            x_grid_tmp, y_grid_tmp = self._get_grid_for_pixel(px)
+        x_grid, y_grid = self._get_grid_for_pixel(px)
 
-            x_tms_offset = x_grid_tmp / self.grid_size
-            y_tms_offset = y_grid_tmp / self.grid_size
-
-            x_grid = self.tms_x + x_tms_offset
-            y_grid = self.tms_y - y_tms_offset
-
-            x_px = px[0] - x_grid_tmp
-            y_px = px[1] - y_grid_tmp
-            # print 'raster_px', px, 'x_grid, y_grid',x_grid, y_grid, 'tile_px', x_px, y_px
-        else:
-            x_grid, y_grid = self._get_grid_for_pixel(px)
-
-            # Look up the value in the x,y offset in the grid tile we just found
-            # or read, and return it.
-            x_px = px[0] - x_grid
-            y_px = px[1] - y_grid
+        # Look up the value in the x,y offset in the grid tile we just found
+        # or read, and return it.
+        x_px = px[0] - x_grid
+        y_px = px[1] - y_grid
 
         # If we haven't already read this grid tile into memory, do so now,
         # and store it in raster_bands for future queries to access.
@@ -774,10 +760,7 @@ class RasterDataset(RasterBase):
         # Look up the grid tile for this pixel.
         raster = self.raster_bands[(x_grid, y_grid)]
 
-        if raster.ndim == 2:  # grayscale
-            return raster[y_px][x_px]
-        elif raster.ndim == 3:  # RGBA+
-            return raster[:, y_px, x_px] # GDAL style dimensions order
+        return raster[y_px][x_px]
 
     def _get_grid_for_pixel(self, px):
         """Compute the min_x, min_y of the tile that contains pixel,
@@ -1006,6 +989,121 @@ class RasterDataset(RasterBase):
             #    del tiles_to_ids[e]
 
 
+class TiledWebRaster(RasterDataset):
+    """
+    Raster representation for tiled data sets commonly used on the web
+    (e.g OpenLayers, GoogleMaps, etc.).  These have been assumed to be
+    produced using the gdal2tiles.py script (found in /scripts dir).
+
+    Assumes that the tiles are projected in Popular Visualisation CRS / Mercator
+    (EPSG:3785)
+
+    Parameters
+    ----------
+    path: str
+       The path to the tiled data
+    zoom: int
+       Zoom to use, typically a value from 6 to 15.
+
+    tile_size: int
+       n x n size of each tile in pixels, default is 256
+
+    bands: list of ints
+       The bands to use.  Default is [1, 2, 3]
+
+    xy_tile_path: str
+       The tile path structure, default="%s/%s.png"
+
+    Attributes
+    ----------
+    path : str
+        Path to raster data files.
+
+    resoltution : float
+        Number of meters in both x & y that each pixel represents.
+        For example, at a zoom of 11, each pixel is approx 76 m x 76 m.
+
+    Notes
+    -----
+    Since these datasets are typically png files, there will be a substantial
+    performance hit due to the CPU overhead of decompression
+    """
+    def __init__(self, path, zoom, tile_size=256, bands=None,
+                 xy_tile_path="%s/%s.png"):
+        self.gm = globalmaptiles.GlobalMercator(tileSize=256)
+        self.resolution = self.gm.Resolution(zoom)
+        self.zoom = zoom
+        self.bands = range(1, 4) if bands is None else bands
+        self.tile_size = tile_size
+        xsize = 2**zoom*tile_size
+        ysize = xsize
+        max_lat = 20037508.342789244  # 1/2 the curcumference of the earther in meters
+        min_lon = -20037508.342789244
+        geo_transform = (min_lon, self.resolution, 0., max_lat, 0., -self.resolution)
+        proj = projection_from_epsg(3785)  # Sphereical Mercator
+        grid_size = (2*max_lat/self.resolution, 2*max_lat/self.resolution)
+        tile_structure = "%d/" % zoom + xy_tile_path
+        super(TiledWebRaster, self).__init__(path, xsize, ysize, geo_transform, proj,
+                                             grid_size=grid_size, tile_structure=tile_structure)
+
+    def _to_pixels(self, lat, lon, alt=None):
+        a, b = super(TiledWebRaster, self)._to_pixels(lat, lon, alt=alt)
+        return a, self.ysize - b
+
+    def _get_value_for_pixel(self, px):
+        """Look up value for a pixel in raster space.
+
+        Parameters
+        ----------
+        px : np.array
+            Pixel coordinates for 1 point: [x_coord, y_coord]
+
+        """
+        x_grid, y_grid = self.gm.PixelsToTile(px[0], px[1])
+
+        # Look up the value in the x,y offset in the grid tile we just found
+        # or read, and return it.
+        x_px = px[0] - x_grid*self.tile_size
+        y_px = px[1] - y_grid*self.tile_size
+
+        # If we haven't already read this grid tile into memory, do so now,
+        # and store it in raster_bands for future queries to access.
+        if (x_grid, y_grid) not in self.raster_bands:
+            filename = self.path + self.tile_structure % (x_grid, y_grid)
+            self.raster_bands[(x_grid, y_grid)] = [read_vsimem(filename, b) for b in self.bands]
+            if self.dtype is None:
+                self.dtype = [r.dtype for r in self.raster_bands[(x_grid, y_grid)]]
+
+        # Look up the grid tile for this pixel.
+        raster = self.raster_bands[(x_grid, y_grid)]
+        try:
+            return [r[y_px][x_px] for r in raster]
+        except:
+            return [0 for i in raster]
+
+    def get_values_for_pixels(self, pxs):
+        """Look up values for a list of pixels in raster space.
+
+        Parameters
+        ----------
+        pxs : np.array
+            Array of pixel coordinates. Each row is [x_coord, y_coord]
+            for one point.
+
+        Returns
+        -------
+        list of dtype
+            List of values in raster at pixel coordinates specified in pxs.
+            Type is determined by GDAL2NP_CONVERSION from RasterBand data
+            type.
+        """
+        values = [self._get_value_for_pixel(px) for px in pxs]
+        n = len(values)
+        m = len(self.bands)
+        x = [[values[i][j] for i in range(n)] for j in range(m)]
+        return [np.array(x[i], dtype=self.dtype[i]) for i in range(m)]
+
+
 def read_catalog(dataset_catalog_filename_or_handle, workdir=None):
     """Take a catalog file and create a raster dataset
 
@@ -1049,7 +1147,6 @@ def read_catalog(dataset_catalog_filename_or_handle, workdir=None):
     grid_size = decoded.get("GridSize", None)
     index = None
     tile_structure = None
-    tms_z = None
 
     if "Index" in decoded:
         index, index_df = read_geojson(json.dumps(decoded["Index"]),
@@ -1059,17 +1156,12 @@ def read_catalog(dataset_catalog_filename_or_handle, workdir=None):
     if "Tile_structure" in decoded:
         tile_structure = decoded["Tile_structure"]
 
-    if "TMS_z" in decoded:
-        tms_z = int(decoded["TMS_z"])
-
     return RasterDataset(path, size[0], size[1],
                          geo_transform=transform,
                          proj=proj,
                          grid_size=grid_size,
                          index=index,
-                         tile_structure=tile_structure,
-                         tms_z=tms_z
-                         )
+                         tile_structure=tile_structure)
 
 
 def read_raster(path, band_number=1):
