@@ -844,7 +844,7 @@ class RasterDataset(RasterBase):
                 diff = b.Intersection(to_geometry(shp, proj=self.proj))
                 areas[i] = diff.GetArea()
 
-        index = areas.keys()
+        index = list(areas.keys())
         total_area = sum(areas.values())
 
         if total_area > 0:

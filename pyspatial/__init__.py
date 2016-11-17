@@ -24,11 +24,15 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 try:
     from pyspatial import spatiallib
+    from pyspatial import fileutils
+    from pyspatial import utils
+    from pyspatial import py3
+
 except ImportError:
     import spatiallib
+    import fileutils
+    import utils
+    import py3
 
-import fileutils
-import utils
-import py3
 from pyspatial.vector import read_geojson, read_layer
 from pyspatial.raster import read_raster
