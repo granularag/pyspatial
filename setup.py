@@ -48,8 +48,14 @@ extensions = [
 if USE_CYTHON:
     extensions = cythonize(extensions)
 
-rootpath = os.path.abspath(os.path.dirname(__file__))
+if os.environ.get('READTHEDOCS', False) == 'True':
+    INSTALL_REQUIRES = []
+else:
+    extensions = []
+    INSTALL_REQUIRES = ['pandas', 'shapely', 'fiona', 'GDAL',
+                        'scikit-image', 'RTree']
 
+rootpath = os.path.abspath(os.path.dirname(__file__))
 
 def read(*parts):
     return codecs.open(os.path.join(rootpath, *parts), 'r').read()
@@ -64,7 +70,7 @@ pkg_data = {'': ['templates/*.js',
 long_description = '{}\n{}'.format(read('README.md'), read('CHANGES.txt'))
 setup(
     name="pyspatial",
-    version='0.2.0',
+    version='0.2.1',
     author="Granular, Inc",
     maintainer="Aman Thakral",
     description='Data structures for working with (geo)spatial data',
@@ -74,6 +80,7 @@ setup(
     packages=['pyspatial'],
     package_data=pkg_data,
     long_description=long_description,
+    install_requires=INSTALL_REQUIRES,
     classifiers=['Development Status :: 4 - Beta',
                  'Topic :: Scientific/Engineering :: GIS',
                  'License :: OSI Approved :: BSD License'],
