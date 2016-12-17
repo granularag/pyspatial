@@ -49,13 +49,7 @@ extensions = [
 if USE_CYTHON:
     extensions = cythonize(extensions)
 
-if os.environ.get('READTHEDOCS', False) == 'True':
-    INSTALL_REQUIRES = []
-else:
-    extensions = []
-    INSTALL_REQUIRES = ['numpy', 'pandas', 'shapely', 'GDAL',
-                        'scikit-image', 'RTree']
-
+INSTALL_REQUIRES=[]
 rootpath = os.path.abspath(os.path.dirname(__file__))
 
 
