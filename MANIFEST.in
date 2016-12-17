@@ -7,6 +7,7 @@ include requirements.txt
 include setup.py
 include scripts/make_index
 include scripts/make_catalog_file
+include pyspatial/*.pyx
 
 global-exclude *.so
 global-exclude *.pyd
