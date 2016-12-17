@@ -19,14 +19,15 @@ pyspatial makes it easy to read, analyze, query, and visualize spatial data in b
   * When performing operations between data sources, the data will automatically be reprojected intelligently.  No more spatial projection management!
   * Integrated interactive visualization within IPython (via Leaflet).  Plots markers, geometries, and choropleths too!
 
-# Examples
+## Examples
 
-http://nbviewer.jupyter.org/github/granularag/pyspatial/tree/master/examples/
+Plese see this [link](http://nbviewer.jupyter.org/github/granularag/pyspatial/tree/master/examples/).
 
-# Questions?
+## Questions?
 
 Send us a message on google groups: [pyspatial-users@googlegroups.com](https://groups.google.com/forum/#!forum/pyspatial-users)
-# Development
+
+## Development
 
 * Python code: pip install -e /path/to/pyspatial
 * Cython code: python setup.py build_ext --inplace
@@ -35,7 +36,7 @@ Send us a message on google groups: [pyspatial-users@googlegroups.com](https://g
 ## TODOs
 * Adjust timed tests.  Currently calibrated to a early Macbook Pro 15" with Core i7.  These tend to fail on many other machines.  Should either remove the @timed decorators, or figure out what a reasonable time is for the tests.
 
-# Known Issues
+## Known Issues
 
 * In ogr, when you get the centroid of a geometry (e.g. cent = my_geometry.Centroid()), cent does not inherit the spatial reference. It needs to be reassigned using cent.AssignSpatialReference(my_geometry.GetSpatialReference())
 * VectorLayer object does not support a Float64Index
@@ -43,7 +44,7 @@ Send us a message on google groups: [pyspatial-users@googlegroups.com](https://g
   * "TypeError: object of type 'Geometry' has no len()", most likely you have duplicate values in your index.  Make sure your index is unique.
 * On some environments, calling shape.Intersection(point) for certain shape/point combinations causes python to crash. See [this gist](https://gist.github.com/sandra-granular/c5009e189d842ddf72878c41df77e03c)
 
-# Contributors
+## Contributors
 
 * Aman Thakral (Lead, github: aman-thakral)
 * Josh Daniel (github: joshdaniel)

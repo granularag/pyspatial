@@ -160,8 +160,12 @@ def to_feature(shp, fid, proj=None):
     feature.SetFID(fid)
     return feature
 
+# Handle issues with mock for sphinx
+try:
+    OLD_PANDAS = issubclass(pd.Series, ndarray)
+except TypeError:
+    OLD_PANDAS = True
 
-OLD_PANDAS = issubclass(pd.Series, ndarray)
 BOOL_PREDICATES = ["intersects", "contains", "within", "crosses", "touches",
                    "equals", "disjoint"]
 

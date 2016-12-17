@@ -1,4 +1,6 @@
 mock
+sphinx_rtd_theme
+recommonmark
 Sphinx==1.3.5
 nose==1.3.4
 nose-timer==0.5.0
