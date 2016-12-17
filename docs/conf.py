@@ -16,9 +16,7 @@ import sys
 import os
 import sphinx_rtd_theme
 
-#from pyspatial import __version__
 from recommonmark.parser import CommonMarkParser
-from recommonmark.transform import AutoStructify
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
