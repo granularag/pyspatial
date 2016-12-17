@@ -9,6 +9,8 @@ pyspatial is python package to provide data structures on top of gdal/ogr. Its c
 
 pyspatial makes it easy to read, analyze, query, and visualize spatial data in both vector and raster form. It brings the familiarity of pandas to working with vector data, and provides querying capability similar to PostGIS for both vector and raster data.  Since it uses GDAL for much of the computations, the performance is quite good.  Based on the authors' experience, the performance has been significantly better than PostGIS, and orders of magnitude faster than similar libraries in R.
 
+*Documentation is available [here](http://pyspatial.readthedocs.io/)*
+
 ## Library Highlights
   * Battle tested: we use it for our day-to-day work, and for processing all the data behind [AcreValue](https://www.acrevalue.com/).  In fact, all of our PostGIS workflows have been migrated to pyspatial.
   * Read/write both raster and vector data (including support for http/s3/google cloud sources).  Also convert to/from shapely/gdal/ogr/numpy objects seamlessly.
