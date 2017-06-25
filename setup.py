@@ -73,7 +73,7 @@ pkg_data = {'': ['templates/*.js',
 long_description = '{}\n{}'.format(read('README.md'), read('CHANGES.txt'))
 setup(
     name="pyspatial",
-    version='0.2.1',
+    version='0.2.2',
     author="Granular, Inc",
     maintainer="Aman Thakral",
     description='Data structures for working with (geo)spatial data',

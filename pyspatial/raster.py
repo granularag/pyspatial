@@ -105,7 +105,7 @@ def rasterize(shp, ext_outline=False, ext_fill=True, int_outline=False,
     -------
     np.ndarray representing the rasterized shape.
     """
-    sf = scale_factor
+    sf = int(scale_factor)
 
     minx, miny, maxx, maxy = map(int, shp.bounds)
     if minx == maxx and miny == maxy:
@@ -120,7 +120,7 @@ def rasterize(shp, ext_outline=False, ext_fill=True, int_outline=False,
         return np.zeros([1, n]) + 1./n
 
     if ((maxx - minx + 1) + (maxy - miny + 1)) <= 2*sf:
-        sf = 1.0
+        sf = 1
 
     shp = scale(shp, xfact=sf, yfact=sf)
     minx, miny, maxx, maxy = shp.bounds
