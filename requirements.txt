@@ -9,3 +9,4 @@ smart_open>=1.1.0
 requests>=2.5.1
 Rtree>=0.8.2
 fiona==1.6.3
+jinja2>=2.8
