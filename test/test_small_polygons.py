@@ -50,7 +50,7 @@ def test_small_polygon():
 
     total_area = sum(areas.values())
 
-    index = areas.keys()
+    index = list(areas.keys())
     if total_area > 0:
         weights = np.array([areas[k]/total_area for k in index])
     else:

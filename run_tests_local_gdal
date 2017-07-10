@@ -1,0 +1,7 @@
+#!/bin/bash
+set -e
+set -x
+
+export GDAL_HOME=$HOME/local
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$GDAL_HOME/lib
+nosetests -v

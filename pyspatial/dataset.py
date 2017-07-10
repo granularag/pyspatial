@@ -28,7 +28,6 @@ import numpy as np
 from datetime import datetime, date
 import re
 
-# Python3
 try:
     basestring
 except NameError:
