@@ -60,10 +60,16 @@ def get_type(s, type_map=TYPE_MAP):
         return None
     else:
         np_type = re.findall("[A-z]+", str(np.dtype(t)))[0]
+        ret = None
         if np_type in ["int", "float"]:
-            return "number"
+            ret = "number"
+        elif np_type == "S":
+            ret = "text"
         else:
-            return np_type
+            ret = np_type
+
+        assert ret in ["text", "number", "bool", "datetime"], "Invalid type for value: %s" % t
+        return ret
 
 
 def to_dict(df, hidden=None, not_visible=None, labels=None, types=None):
@@ -113,7 +119,7 @@ def to_dict(df, hidden=None, not_visible=None, labels=None, types=None):
 
     df = df.reset_index()
 
-    for k, v in df.items():
+    for k, v in df.iteritems():
         row = {"type": get_type(v), "field": k, "label": k,
                "visible": True, "hidden": False}
 

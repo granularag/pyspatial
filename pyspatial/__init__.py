@@ -27,8 +27,6 @@ try:
 except ImportError:
     import spatiallib
 
-import fileutils
-import utils
-import py3
+from pyspatial import fileutils, utils, py3
 from pyspatial.vector import read_geojson, read_layer
 from pyspatial.raster import read_raster
