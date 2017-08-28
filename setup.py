@@ -53,7 +53,7 @@ if USE_CYTHON:
 if os.environ.get('READTHEDOCS', False) == 'True':
     INSTALL_REQUIRES = []
 else:
-    extensions = []
+    # extensions = []
     INSTALL_REQUIRES = ['numpy', 'pandas', 'shapely', 'GDAL',
                         'scikit-image', 'RTree']
 
@@ -73,7 +73,7 @@ pkg_data = {'': ['templates/*.js',
 long_description = '{}\n{}'.format(read('README.md'), read('CHANGES.txt'))
 setup(
     name="pyspatial",
-    version='0.2.2',
+    version='0.2.3',
     author="Granular, Inc",
     maintainer="Aman Thakral",
     description='Data structures for working with (geo)spatial data',
