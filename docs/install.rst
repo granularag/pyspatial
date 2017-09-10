@@ -12,15 +12,15 @@ OSX
    # Install Homebrew
    ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 
-   brew install geos
+   # From:  https://www.karambelkar.info/2016/10/gdal-2-on-mac-with-homebrew/
+   brew unlink gdal
+   brew tap osgeo/osgeo4mac && brew tap --repair
+   brew install jasper netcdf # gdal dependencies
+   brew install gdal2 --with-armadillo \
+   --with-complete --with-libkml --with-unsupported
+   brew link --force gdal2
+   
    brew install spatialindex
-
-   # Install latest GDAL (1.11.2)
-   brew install gdal
-
-   ## Alternatively, install GDAL 2.0 (Still in testing)
-   # brew install
-   # https://gist.githubusercontent.com/brianreavis/261cf46b44669366df9c/raw/aa7f2f2a8a511975d7d1dae9e5acf5ac203ba969/gdal.rb
 
 
 Debian/Ubuntu

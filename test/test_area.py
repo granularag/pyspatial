@@ -62,7 +62,7 @@ class TestVectorLayer:
                             537.630561662)
 
     # Currently really slow
-    @timed(8)
+    # @timed(8)
     def test_perf_areas_utm(self):
         assert_almost_equal(self.clus.areas("utm").sum() * M_TO_MI,
                             537.78827998574002)

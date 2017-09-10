@@ -1,0 +1,6 @@
+#!/bin/bash
+set -e
+pip install --upgrade --index-url https://test.pypi.org/simple/ pyspatial
+pushd test
+nosetests
+popd

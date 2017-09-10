@@ -1,0 +1,17 @@
+#!/bin/bash
+set -e
+is_installed=`pip freeze | grep pyspatial | wc -l`
+if [ $is_installed = '1' ]; then
+  pip uninstall -y pyspatial
+fi
+
+if [ -f "pyspatial/spatiallib.c" ]; then
+   rm pyspatial/spatiallib.c
+fi
+
+python setup.py bdist_wheel
+python setup.py bdist --format=zip
+pip install dist/pyspatial-0.2.4-cp27-cp27m-macosx_10_12_x86_64.whl
+pushd test/
+nosetests
+popd

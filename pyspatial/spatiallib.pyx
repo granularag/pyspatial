@@ -3,7 +3,9 @@ cimport cython
 import numpy as np
 cimport numpy as np
 from libc.stdint cimport uintptr_t
+from shapely.coords import required
 from libc.math cimport sin, cos, exp, sqrt, floor
+
 cdef extern from "math.h":
     double sin(double theta)
     double cos(double theta)
@@ -20,7 +22,6 @@ cdef inline double radians(double x): return PI*x/180.
 cdef inline double degrees(double x): return 180.*x/PI
 cdef PI = pi()
 
-from shapely.coords import required
 
 DTYPE = np.uint8
 ctypedef np.uint8_t DTYPE_t

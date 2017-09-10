@@ -25,11 +25,12 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import os
 import pickle
+from osgeo import ogr
+
 import pyspatial.vector as vt
 from pyspatial.utils import projection_from_string, ALBERS_N_AMERICA
 from pyspatial.utils import projection_from_epsg
 from pyspatial.spatiallib import haversine
-from osgeo import ogr
 from nose.tools import assert_raises, assert_almost_equal
 
 base = os.path.abspath(os.path.dirname(__file__))

@@ -24,8 +24,8 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 import pandas as pd
-from osgeo.ogr import Geometry
 from shapely.geometry.base import BaseGeometry
+from osgeo.ogr import Geometry
 import json
 
 from jinja2 import Environment, PackageLoader
