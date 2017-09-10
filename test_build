@@ -10,7 +10,8 @@ if [ -f "pyspatial/spatiallib.c" ]; then
 fi
 
 python setup.py bdist_wheel
-pip install dist/pyspatial-0.2.3-cp27-cp27m-macosx_10_12_x86_64.whl
+python setup.py bdist --format=zip
+pip install dist/pyspatial-0.2.4-cp27-cp27m-macosx_10_12_x86_64.whl
 pushd test/
 nosetests
 popd
