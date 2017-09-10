@@ -4,7 +4,7 @@ Cython==0.26.1
 shapely==1.5.17 --no-binary shapely
 scikit-image==0.12.3
 pandas==0.20.3
-GDAL==2.2.1
+GDAL
 smart_open==1.5.3
 requests==2.18.4
 Rtree==0.8.3
