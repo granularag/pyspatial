@@ -24,9 +24,10 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 import numpy as np
+from osgeo import osr, ogr
 from shapely.geometry import LineString, MultiLineString
 from shapely.geometry import Polygon, MultiPolygon
-from osgeo import osr, ogr
+
 
 PROJ_WGS84 = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"
 ALBERS_N_AMERICA = ("+proj=aea +lat_1=20 +lat_2=60 +lat_0=40 "

@@ -29,25 +29,29 @@ Parts of this file were adapted from the geopandas project
 under the BSD license.
 """
 
-from pyspatial.py3 import urlparse
-
 import requests
-from pyspatial import fileutils
 from six import string_types
 from numpy import ndarray
 import pandas as pd
-from rtree import index
-from osgeo.osr import CoordinateTransformation, SpatialReference
+
 from osgeo import ogr
+from osgeo.osr import CoordinateTransformation, SpatialReference
+
+# Shapely
 from shapely.geometry.base import BaseGeometry
 from shapely.geometry import shape
 from shapely import wkb
 from shapely.geometry import box
 from shapely import ops
+
+from rtree import index
+
+# Pyspatial
+from pyspatial.py3 import urlparse
 from pyspatial import utils as ut
 from pyspatial.spatiallib import to_utm
-from pyspatial.io import get_ogr_datasource, write_shapefile
-
+from pyspatial.geoio import get_ogr_datasource, write_shapefile
+from pyspatial import fileutils
 
 def to_shapely(feat, proj=None):
     if isinstance(feat, BaseGeometry):

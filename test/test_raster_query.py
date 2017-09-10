@@ -105,7 +105,7 @@ class TestRasterQuery:
 
     # Compute term frequency for cdl_2014 on a tiled dataset for all shapes,
     # and compare against our saved single-tile computation.
-    @timed(60)
+    # @timed(60)
     def test_term_frequency_tiled_all_shapes(self):
         dataset_catalog_file = get_path("../catalog/cdl_2014.json")
         rd = read_catalog(dataset_catalog_file)
@@ -142,7 +142,7 @@ class TestRasterQuery:
 
     # Compute term frequency for cdl_2014 on an untiled dataset for all shapes,
     # and compare against our saved single-tile computation.
-    @timed(60)
+    # @timed(60)
     def test_term_frequency_untiled_all_shapes(self):
         dataset_catalog_file = get_path("../catalog/cdl_2014_untiled.json")
         rd = read_catalog(dataset_catalog_file)

@@ -27,14 +27,14 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import os
 import codecs
-from distutils.core import setup
-from distutils.extension import Extension
+from setuptools import setup, find_packages, Extension
 from pip.req import parse_requirements
 import numpy
 
 
 try:
-    from Cython.Build import cythonize
+    from Cython.Distutils import build_ext
+    #from Cython.Build import cythonize
     USE_CYTHON = True
     ext = ".pyx"
 
@@ -43,12 +43,16 @@ except ImportError as e:
     ext = ".c"
 
 extensions = [
-    Extension("pyspatial.spatiallib", ["pyspatial/spatiallib" + ext],
+    Extension("pyspatial.spatiallib",
+              ["pyspatial/spatiallib" + ext],
+              extra_compile_args=["-g"],
+              extra_link_args=["-g"],
               include_dirs = [numpy.get_include()]),
 ]
 
-if USE_CYTHON:
-    extensions = cythonize(extensions)
+#if USE_CYTHON:
+#   pass
+#   extensions = cythonize(extensions)
 
 if os.environ.get('READTHEDOCS', False) == 'True':
     INSTALL_REQUIRES = []
@@ -73,14 +77,15 @@ pkg_data = {'': ['templates/*.js',
 long_description = '{}\n{}'.format(read('README.md'), read('CHANGES.txt'))
 setup(
     name="pyspatial",
-    version='0.2.3',
+    version='0.2.4',
     author="Granular, Inc",
     maintainer="Aman Thakral",
     description='Data structures for working with (geo)spatial data',
     license='BSD',
     url='https://github.com/granularag/pyspatial',
     ext_modules=extensions,
-    packages=['pyspatial'],
+    packages=find_packages(),
+    cmdclass = {'build_ext': build_ext},
     package_data=pkg_data,
     long_description=long_description,
     install_requires=INSTALL_REQUIRES,

@@ -37,15 +37,18 @@ from skimage.transform import downscale_local_mean
 from osgeo import gdal, osr
 from osgeo.gdalconst import GA_ReadOnly
 from osgeo.osr import SpatialReference
+
 from shapely import wkb, ops
 from shapely.affinity import scale
 from shapely.geometry import box
+
+from pyspatial import spatiallib as slib
+
 from skimage.io import imsave
 
 from PIL import Image, ImageDraw
 from pyspatial import fileutils
 
-from pyspatial import spatiallib as slib
 from pyspatial.vector import read_geojson, to_geometry, bounding_box
 from pyspatial.vector import VectorLayer
 from pyspatial.utils import projection_from_epsg
