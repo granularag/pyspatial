@@ -21,6 +21,13 @@ pyspatial makes it easy to read, analyze, query, and visualize spatial data in b
   * When performing operations between data sources, the data will automatically be reprojected intelligently.  No more spatial projection management!
   * Integrated interactive visualization within IPython (via Leaflet).  Plots markers, geometries, and choropleths too!
 
+## Docker
+
+```
+docker pull amanthakral/pyspatial
+```
+[See docker/README.md for build/run instructions](docker/README.md)
+
 ## Examples
 
 Plese see this [link](http://nbviewer.jupyter.org/github/granularag/pyspatial/tree/master/examples/).
