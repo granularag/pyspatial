@@ -119,7 +119,7 @@ def to_dict(df, hidden=None, not_visible=None, labels=None, types=None):
 
     df = df.reset_index()
 
-    for k, v in df.iteritems():
+    for k, v in df.items():
         row = {"type": get_type(v), "field": k, "label": k,
                "visible": True, "hidden": False}
 

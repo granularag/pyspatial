@@ -93,7 +93,7 @@ class TestRasterQuery:
         # plus 2 shapes in CA that should be out of range.
         p = get_path("vector/clu/four_shapes_2il_2ca.geojson")
         vl_outside, vl_df = read_geojson(p)
-        assert (len(vl_outside.keys()) == 4)
+        assert (len(list(vl_outside.keys())) == 4)
 
         dataset_catalog_file = get_path("../catalog/cdl_2014.json")
         rd = read_catalog(dataset_catalog_file)

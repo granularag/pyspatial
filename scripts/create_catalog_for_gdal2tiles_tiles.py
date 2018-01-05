@@ -52,7 +52,7 @@ if __name__ == "__main__":
             if filename.endswith('.png'):
                 rel_path = '.' + os.sep + os.path.join(dirname, filename)
                 tms_z, tms_x, tms_y = rel_path.rstrip('.png').split(os.sep)[-3:]
-                tms_z, tms_x, tms_y = map(int, (tms_z, tms_x, tms_y))
+                tms_z, tms_x, tms_y = list(map(int, (tms_z, tms_x, tms_y)))
                 minLat, minLon, maxLat, maxLon = g.TileLatLonBounds(tms_x, tms_y, tms_z)
                 # minLat, minLon = lower left corner
                 # maxLat, maxLon = upper right corner
@@ -82,7 +82,7 @@ if __name__ == "__main__":
         with open(args.geojson_filename, "w+b") as outf:
             outf.write(json.dumps(geojson._data, indent=4, sort_keys=True))
     else:
-        print json.dumps(geojson._data, indent=4, sort_keys=True)
+        print(json.dumps(geojson._data, indent=4, sort_keys=True))
 
 
     ######################## Creating the catalog file
@@ -175,5 +175,5 @@ if __name__ == "__main__":
         with open(args.catalog_filename, "w+b") as outf:
             outf.write(json.dumps(catalog, indent=4, sort_keys=True))
     else:
-        print json.dumps(catalog, indent=4, sort_keys=True)
+        print(json.dumps(catalog, indent=4, sort_keys=True))
 

@@ -27,6 +27,6 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #except ImportError:
 #    import spatiallib
 
-import fileutils, utils, py3
+from pyspatial import fileutils, utils
 from pyspatial.vector import read_geojson, read_layer
 from pyspatial.raster import read_raster

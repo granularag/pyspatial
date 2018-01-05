@@ -1,5 +1,5 @@
 """
-Copyright (c) 2016, Granular, Inc.
+Copyright (c) 2016-2018 Granular, Inc.
 All rights reserved.
 License: BSD 3-Clause ("BSD New" or "BSD Simplified")
 
@@ -33,6 +33,7 @@ import requests
 from six import string_types
 from numpy import ndarray
 import pandas as pd
+from requests.compat import urlparse
 
 from osgeo import ogr
 from osgeo.osr import CoordinateTransformation, SpatialReference
@@ -47,11 +48,10 @@ from shapely import ops
 from rtree import index
 
 # Pyspatial
-from pyspatial.py3 import urlparse
+from pyspatial import fileutils
 from pyspatial import utils as ut
 from pyspatial.spatiallib import to_utm
 from pyspatial.geoio import get_ogr_datasource, write_shapefile
-from pyspatial import fileutils
 
 def to_shapely(feat, proj=None):
     if isinstance(feat, BaseGeometry):
@@ -768,7 +768,7 @@ class VectorLayer(pd.Series):
         if ids is None:
             return self.map(to_shapely)
         else:
-            if hasattr(ids, "__iter__"):
+            if hasattr(ids, "__iter__") and not isinstance(ids, string_types):
                 return self[ids].map(to_shapely)
             else:
                 return to_shapely(self[ids])
@@ -951,11 +951,12 @@ class VectorLayer(pd.Series):
         return to_geometry(box(xmin, ymin, xmax, ymax), proj=self.proj)
 
     def _gen_index(self):
-        ix = range(len(self.features))
+        ix = list(range(len(self.features)))
         for i, id, geom in zip(ix, self.index, self.features):
             xmin, xmax, ymin, ymax = geom.GetEnvelope()
             yield (i, (xmin, ymin, xmax, ymax), id)
 
+    # for old pandas support: ~0.17.0
     def items(self):
         return self.iteritems()
 
@@ -982,7 +983,7 @@ class VectorLayer(pd.Series):
         i = 0
         while i < max_neighbors:
             try:
-                ret.append(neighbors.next())
+                ret.append(next(neighbors))
             except StopIteration:
                 i = max_neighbors
             i += 1
@@ -1055,7 +1056,7 @@ class VectorLayer(pd.Series):
             for i, f in zip(vl.ids, res["features"]):
                 props = f["properties"]
                 df_props = df.loc[i].to_dict()
-                f["properties"] = dict(props.items() + df_props.items())
+                f["properties"] = dict(list(props.items()) + list(df_props.items()))
                 f["properties"]["__id__"] = i
         else:
             for i, f in zip(vl.ids, res["features"]):
@@ -1166,7 +1167,7 @@ def read_datasource(ds, layer=0, index=None):
 
     if index is None:
         ids = pd.Index([f.GetFID() for f in features])
-    elif isinstance(index, str) or isinstance(index, unicode):
+    elif isinstance(index, str) or isinstance(index, str):
         ids = pd.Index([f[index] for f in features])
     elif hasattr(index, "__iter__"):
         ids = pd.Index(index)
@@ -1177,7 +1178,7 @@ def read_datasource(ds, layer=0, index=None):
         msg = "index length doesn't match number of shapes: %d vs %d."
         raise ValueError(msg % (len(ids), len(features)))
 
-    rows = [f.items() for f in features]
+    rows = [list(f.items()) for f in features]
     df = pd.DataFrame(rows, index=ids)
     geoms = [to_geometry(f, copy=True) for f in features]
     proj = ut.get_projection(dslayer)
@@ -1241,7 +1242,7 @@ def read_geojson(path_or_str, index=None):
         try:
             ids = [x["id"] for x in feats]
         except KeyError:
-            ids = range(len(feats))
+            ids = list(range(len(feats)))
 
         name = "index"
     elif isinstance(index, string_types):

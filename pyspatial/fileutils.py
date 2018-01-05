@@ -1,11 +1,11 @@
 from smart_open import smart_open, ParseUri
 
-from pyspatial.py3 import urlparse
 import boto
 from boto import connect_s3
 import os
 import six
 
+from requests.compat import urlparse
 
 def parse_uri(uri):
     parsed_uri = urlparse(uri)

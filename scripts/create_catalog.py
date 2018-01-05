@@ -109,4 +109,4 @@ if __name__ == "__main__":
         with open(args.dest, "w+b") as outf:
             outf.write(json.dumps(catalog, indent=4, sort_keys=True))
     else:
-        print json.dumps(catalog, indent=4, sort_keys=True)
+        print(json.dumps(catalog, indent=4, sort_keys=True))
