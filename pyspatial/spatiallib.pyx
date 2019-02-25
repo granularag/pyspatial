@@ -3,8 +3,12 @@ cimport cython
 import numpy as np
 cimport numpy as np
 from libc.stdint cimport uintptr_t
-from shapely.coords import required
 from libc.math cimport sin, cos, exp, sqrt, floor
+
+try:
+    from shapely.coords import required
+except:
+    from shapely.speedups._speedups import required
 
 cdef extern from "math.h":
     double sin(double theta)

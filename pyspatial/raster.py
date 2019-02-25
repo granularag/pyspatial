@@ -66,7 +66,7 @@ NP2GDAL_CONVERSION = {
     "complex128": 11,
 }
 
-GDAL2NP_CONVERSION = {v: k for k, v in NP2GDAL_CONVERSION.items()}
+GDAL2NP_CONVERSION = {v: k for k, v in list(NP2GDAL_CONVERSION.items())}
 TILE_REGEX = re.compile('([0-9]+)_([0-9]+)\.tif')
 
 
@@ -110,7 +110,7 @@ def rasterize(shp, ext_outline=False, ext_fill=True, int_outline=False,
     """
     sf = int(scale_factor)
 
-    minx, miny, maxx, maxy = map(int, shp.bounds)
+    minx, miny, maxx, maxy = list(map(int, shp.bounds))
     if minx == maxx and miny == maxy:
         return np.array([[1.]])
 
@@ -502,7 +502,7 @@ class RasterBand(RasterBase, np.ndarray):
                    "nneighbour": gdal.GRA_NearestNeighbour}
 
         if method not in methods:
-            raise ValueError("methods must be one of: %s" % methods.keys())
+            raise ValueError("methods must be one of: %s" % list(methods.keys()))
 
         tx = osr.CoordinateTransformation(self.proj, proj)
 
@@ -841,13 +841,13 @@ class RasterDataset(RasterBase):
 
         grid = self.to_geometry_grid(*shp_px.bounds)
         areas = {}
-        for i, b in grid.items():
+        for i, b in list(grid.items()):
 
             if b.Intersects(to_geometry(shp, proj=self.proj)):
                 diff = b.Intersection(to_geometry(shp, proj=self.proj))
                 areas[i] = diff.GetArea()
 
-        index = areas.keys()
+        index = list(areas.keys())
         total_area = sum(areas.values())
 
         if total_area > 0:
@@ -939,7 +939,7 @@ class RasterDataset(RasterBase):
         else:
             ids = vl.ids.append(missing)
 
-        px_shps = dict(zip(vl.ids, self.to_pixels(vl)))
+        px_shps = dict(list(zip(vl.ids, self.to_pixels(vl))))
 
         for id in ids:
             shp = px_shps.get(id, None)
@@ -1036,7 +1036,7 @@ class TiledWebRaster(RasterDataset):
         self.gm = globalmaptiles.GlobalMercator(tileSize=256)
         self.resolution = self.gm.Resolution(zoom)
         self.zoom = zoom
-        self.bands = range(1, 4) if bands is None else bands
+        self.bands = list(range(1, 4)) if bands is None else bands
         self.tile_size = tile_size
         xsize = 2**zoom*tile_size
         ysize = xsize

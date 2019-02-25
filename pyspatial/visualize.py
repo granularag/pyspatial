@@ -63,7 +63,7 @@ def get_geojson_dict(geo_data):
     if isinstance(geo_data, BaseGeometry) or isinstance(geo_data, Geometry):
         geo_data = [geo_data]
 
-    elif isinstance(geo_data, str) or isinstance(geo_data, unicode):
+    elif isinstance(geo_data, str) or isinstance(geo_data, str):
         geo_data = json.loads(geo_data)
 
     if hasattr(geo_data, "__iter__") and len(geo_data) == 0:
@@ -78,7 +78,7 @@ def get_geojson_dict(geo_data):
     elif isinstance(geo_data, pd.Series):
         g0 = geo_data[0]
         if isinstance(g0, Geometry) or isinstance(g0, BaseGeometry):
-            features = [to_feature(s, i) for i, s in geo_data.items()]
+            features = [to_feature(s, i) for i, s in list(geo_data.items())]
         else:
             raise ValueError(msg)
 
@@ -105,7 +105,7 @@ def to_latlng(shp):
     else:
         raise ValueError("Unable to create latlng from shp")
 
-    return dict(zip(["lng", "lat"], pt["geometry"]["coordinates"]))
+    return dict(list(zip(["lng", "lat"], pt["geometry"]["coordinates"])))
 
 
 def get_latlngs(geo_data):
@@ -116,7 +116,7 @@ def get_latlngs(geo_data):
         return []
 
     elif hasattr(geo_data, "__iter__"):
-        return [to_latlng(s) for i, s in geo_data.items()]
+        return [to_latlng(s) for i, s in list(geo_data.items())]
 
     else:
         raise ValueError("Invalid geo_data")
@@ -204,7 +204,7 @@ class HTMLMap(object):
         if style is not None:
             _style.update(style)
 
-        css = ";".join(["%s:%s" % (k, v) for k, v in _style.items()])
+        css = ";".join(["%s:%s" % (k, v) for k, v in list(_style.items())])
         style = "style=\"{css}\"".format(css=css)
 
     def choropleth(self, column=None, levels=6, palette="Reds"):

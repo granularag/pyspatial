@@ -23,15 +23,22 @@ HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABI
 ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
+from nose.tools import assert_raises, assert_almost_equal
 import os
-import pickle
 from osgeo import ogr
+import pickle
+import sys
+import unittest
+
+try:
+    import simplejson as json
+except:
+    import json
 
 import pyspatial.vector as vt
 from pyspatial.utils import projection_from_string, ALBERS_N_AMERICA
 from pyspatial.utils import projection_from_epsg
 from pyspatial.spatiallib import haversine
-from nose.tools import assert_raises, assert_almost_equal
 
 base = os.path.abspath(os.path.dirname(__file__))
 get_path = lambda x: os.path.join(base, "data/vector", x)
@@ -134,8 +141,11 @@ class TestVectorLayer:
         farallon.AssignSpatialReference(proj)
         cls.counties[cls.sf] = cls.counties[cls.sf].Difference(farallon)
         cls.zips, cls.df4 = vt.read_geojson(path4, index="ZCTA5CE10")
-        p = get_path("clu/four_shapes_2il_2ca.p")
-        cls.df = pickle.load(open(p))
+
+        if sys.version_info[0] < 3.0:
+            p = get_path("clu/four_shapes_2il_2ca.p")
+            cls.df = pickle.load(open(p))
+
         assert isinstance(cls.counties, vt.VectorLayer)
         assert isinstance(cls.counties["San Francisco"], ogr.Geometry)
 
@@ -146,6 +156,7 @@ class TestVectorLayer:
         co, co_df = vt.read_layer(get_path("clu/clu_public_a_co095.shp"))
         assert isinstance(co, vt.VectorLayer)
 
+    @unittest.skipIf(sys.version_info[0] >= 3.0, 'Issues with Python3 pickle of object pickled in Python2')
     def test_from_series(self):
         series = self.df["__geometry__"]
         assert isinstance(vt.from_series(series), vt.VectorLayer)
@@ -154,7 +165,7 @@ class TestVectorLayer:
         sf = self.counties["San Francisco"]
         assert isinstance(sf, ogr.Geometry)
         sf_ids = self.zips.within(sf, index_only=True)
-        assert all(map(lambda x: x.startswith("941"), sf_ids))
+        assert all([x.startswith("941") for x in sf_ids])
 
     def test_intersection(self):
         sf = self.counties["San Francisco"]
@@ -165,8 +176,8 @@ class TestVectorLayer:
         path = get_path("cb_2014_us_state_500k.zip")
         vl, df = vt.read_layer(path, index="STUSPS")
         assert all([a == b for a, b in zip(vl.index, df.index)])
-        vl, df = vt.read_layer(path, index=xrange(5, 61))
-        assert_raises(ValueError, vt.read_layer, path, 0, xrange(5, 56))
+        vl, df = vt.read_layer(path, index=range(5, 61))
+        assert_raises(ValueError, vt.read_layer, path, 0, range(5, 56))
 
     def test_ipredicates(self):
         path = get_path("cb_2014_us_state_500k.zip")
@@ -207,7 +218,7 @@ class TestVectorLayer:
             exp = inf.read()
         act, _ = vt.read_layer(get_path("cb_2014_us_state_20m.zip"),
                                index="STUSPS")
-        assert exp == act[["RI"]].to_json()
+        assert json.loads(exp) == json.loads(act[["RI"]].to_json())
 
     def test_set_theoretic(self):
         proj = projection_from_string(ALBERS_N_AMERICA)

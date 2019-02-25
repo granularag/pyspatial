@@ -26,6 +26,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import os
 import zipfile
 from tempfile import mkdtemp
+from requests.compat import urlparse
 
 from osgeo import ogr
 from osgeo import gdal
@@ -33,7 +34,6 @@ from osgeo.gdalconst import GA_ReadOnly
 
 from pyspatial import fileutils
 from pyspatial.dataset import get_type
-from pyspatial.py3 import urlparse
 
 
 gdal.SetConfigOption('GDAL_HTTP_UNSAFSSL', 'YES')
